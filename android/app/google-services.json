@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "851284674363",
+    "project_id": "magritechapp",
+    "storage_bucket": "magritechapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:851284674363:android:0b74676262e645e7dd591e",
+        "android_client_info": {
+          "package_name": "com.example.e_agritech_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLApj5Bogzxwk07Fos-PvwHqyJ6fsD4Zk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
