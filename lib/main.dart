@@ -21,3 +21,39 @@ class E_MediFarmTechApp extends StatelessWidget {
     );
   }
 }
+
+// lib/
+// ├── constants/
+// │   ├── app_colors.dart
+// │   ├── app_texts.dart
+// │   └── app_theme.dart
+// ├── models/
+// │   ├── user.dart
+// │   └── problem.dart
+// ├── screens/
+// │   ├── launch/
+// │   │   └── launch_screen.dart
+// │   ├── welcome/
+// │   │   └── welcome_screen.dart
+// │   ├── auth/
+// │   │   ├── login_screen.dart
+// │   │   └── register_screen.dart
+// │   ├── farmer/
+// │   │   ├── farmer_home_screen.dart
+// │   │   └── add_problem_screen.dart
+// │   └── student/
+// │       └── student_home_screen.dart
+// ├── services/
+// │   ├── auth_service.dart
+// │   ├── storage_service.dart
+// │   └── database_service.dart
+// ├── providers/
+// │   ├── auth_provider.dart
+// │   └── user_provider.dart
+// ├── widgets/
+// │   ├── common/
+// │   │   ├── custom_button.dart
+// │   │   └── custom_text_field.dart
+// │   ├── farmer/
+// │   └── student/
+// └── main.dart

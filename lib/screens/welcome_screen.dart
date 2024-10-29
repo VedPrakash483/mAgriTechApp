@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'user_selection_screen.dart';
+import 'user_registration_selection.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);

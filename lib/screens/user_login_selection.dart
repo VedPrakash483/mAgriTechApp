@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import '../components/rounded_button.dart';
-import 'register_screen.dart';
-import 'login_screen.dart';
+import 'registraion_login/farmers_login.dart';
+import 'registraion_login/student_login.dart';
 
-class UserSelectionScreen extends StatefulWidget {
-  const UserSelectionScreen({Key? key}) : super(key: key);
+class UserLoginSelection extends StatefulWidget {
+  const UserLoginSelection({super.key});
 
   @override
-  State<UserSelectionScreen> createState() => _UserSelectionScreenState();
+  State<UserLoginSelection> createState() => _UserLoginSelectionState();
 }
 
-class _UserSelectionScreenState extends State<UserSelectionScreen>
+class _UserLoginSelectionState extends State<UserLoginSelection>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  int? _selectedOption;
 
   @override
   void initState() {
@@ -60,8 +58,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
 
-          var tween =
-          Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
           return SlideTransition(
             position: animation.drive(tween),
@@ -95,7 +92,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    "Choose Your Path",
+                    "Login to Your Account",
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -118,29 +115,19 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSelectionCard(
-                          0,
-                          'Student',
-                          'Access educational resources and connect with farmers',
+                        _buildLoginCard(
+                          'Login as Student',
+                          'Access educational resources and courses',
                           Icons.school,
-                              () => _navigateToScreen(
-                            context,
-                            RegisterScreen(userType: 'Student'),
-                          ),
+                              () => _navigateToScreen(context, StudentsLogin()),
                         ),
                         const SizedBox(height: 20),
-                        _buildSelectionCard(
-                          1,
-                          'Farmer',
-                          'Share your knowledge and connect with students',
+                        _buildLoginCard(
+                          'Login as Farmer',
+                          'Manage your profile and connect with students',
                           Icons.agriculture,
-                              () => _navigateToScreen(
-                            context,
-                            RegisterScreen(userType: 'Farmer'),
-                          ),
+                              () => _navigateToScreen(context, FarmersLogin()),
                         ),
-                        const SizedBox(height: 40),
-                        _buildLoginButton(),
                       ],
                     ),
                   ),
@@ -153,23 +140,16 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
     );
   }
 
-  Widget _buildSelectionCard(int index, String title, String description,
-      IconData icon, VoidCallback onPressed) {
-    final isSelected = _selectedOption == index;
-
+  Widget _buildLoginCard(
+      String title, String description, IconData icon, VoidCallback onPressed) {
     return GestureDetector(
-      onTap: () {
-        setState(() => _selectedOption = index);
-        Future.delayed(const Duration(milliseconds: 200), onPressed);
-      },
+      onTap: onPressed,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white
-              : Colors.white.withOpacity(0.9),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -178,12 +158,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
               offset: const Offset(0, 5),
             ),
           ],
-          border: Border.all(
-            color: isSelected
-                ? Theme.of(context).primaryColor
-                : Colors.transparent,
-            width: 2,
-          ),
         ),
         child: Row(
           children: [
@@ -218,39 +192,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
                       color: Colors.grey[600],
                       fontSize: 14,
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return TextButton(
-      onPressed: () => _navigateToScreen(context,LoginScreen()),
-      child: RichText(
-        text: TextSpan(
-          text: 'Already have an account? ',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-          ),
-          children: [
-            TextSpan(
-              text: 'Login',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(0, 1),
-                    blurRadius: 2,
                   ),
                 ],
               ),

@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^5.1.0
+  geolocator: ^9.0.2
   cloud_firestore: ^4.0.0
   firebase_core: ^2.13.0
   firebase_auth: ^4.16.0
