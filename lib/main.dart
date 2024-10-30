@@ -1,4 +1,5 @@
 import 'package:e_agritech_app/farmer/dashboard.dart';
+import 'package:e_agritech_app/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'providers/auth_provider.dart'; // Import your auth provider if you have 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  DefaultFirebaseOptions.currentPlatform;
   await Firebase.initializeApp();
 
   runApp(const MyApp());

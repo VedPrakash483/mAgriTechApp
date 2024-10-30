@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/components/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
@@ -36,7 +37,8 @@ class _FarmersRegisterState extends State<FarmersRegister> {
     try {
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
-        _locationController.text = "${position.latitude}, ${position.longitude}";
+        _locationController.text =
+            "${position.latitude}, ${position.longitude}";
       });
       _showSnackBar('Location updated', Colors.green);
     } catch (e) {

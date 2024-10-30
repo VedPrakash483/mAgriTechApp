@@ -17,7 +17,6 @@ class UserProvider with ChangeNotifier {
     String? state,
     String? specialization,
   }) async {
-    // Create a user model instance
     UserModel newUser = UserModel(
       uid: uid,
       email: email,
@@ -31,10 +30,8 @@ class UserProvider with ChangeNotifier {
       specialization: specialization,
     );
 
-    // Save user info
     await _userService.saveUserInfo(newUser);
 
-    // Notify listeners about the change
     notifyListeners();
   }
 

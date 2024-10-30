@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart'; // Import Flutter Material for ChangeNotifier
+import 'package:flutter/material.dart';
 import 'user_service.dart';
 import '/models/user_model.dart';
 
@@ -7,6 +7,19 @@ class FirebaseAuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final UserService _userService = UserService();
 
+  FirebaseAuthService() {
+    _enablePersistence();
+  }
+
+  // Enable user state persistence
+  Future<void> _enablePersistence() async {
+    await _auth.setPersistence(Persistence.LOCAL);
+  }
+
+  // Getter to fetch the current user
+  User? get currentUser => _auth.currentUser;
+
+  // Register user
   Future<User?> registerUser({
     required String email,
     required String password,
@@ -40,7 +53,6 @@ class FirebaseAuthService extends ChangeNotifier {
 
       await _userService.saveUserInfo(userModel);
 
-      print("Registration successful for user: ${userCredential.user?.email} as $userType");
       notifyListeners(); // Notify listeners after registration
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
@@ -52,6 +64,7 @@ class FirebaseAuthService extends ChangeNotifier {
     }
   }
 
+  // Login user
   Future<User?> loginUser(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -69,10 +82,10 @@ class FirebaseAuthService extends ChangeNotifier {
     }
   }
 
+  // Sign out user
   Future<void> signOutUser() async {
     try {
       await _auth.signOut();
-      print("User signed out successfully");
       notifyListeners(); // Notify listeners after sign out
     } catch (e) {
       print("Sign Out Error: $e");

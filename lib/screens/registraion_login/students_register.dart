@@ -1,3 +1,5 @@
+import 'package:e_agritech_app/services/firebase_auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
@@ -18,6 +20,13 @@ class _StudentRegisterState extends State<StudentRegister> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // comments by asad
+  // first make a instance of FirebaseAuthService
+  /// then make a function of [signUpStudent]
+  // then call that function in button click event
+
+  final FirebaseAuthService _authService = FirebaseAuthService();
+
   String? _selectedState;
   String? _selectedSpecialization;
   bool _isLoading = false;
@@ -36,29 +45,46 @@ class _StudentRegisterState extends State<StudentRegister> {
     'Medicine',
   ];
 
-  Future<void> _register() async {
+  void signUpStudent() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-
-      final user = await Provider.of<FirebaseAuthService>(context, listen: false).registerUser(
-        email: _emailController.text,
-        password: _passwordController.text,
-        name: _nameController.text,
-        userType: 'Student',
-        phone: _phoneController.text,
-        state: _selectedState,
-        specialization: _selectedSpecialization,
+      // Display loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
       );
 
-      setState(() => _isLoading = false);
+      try {
+        await _authService.registerUser(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          name: _nameController.text.trim(),
+          userType: "student",
+        );
 
-      if (user != null) {
-        // Navigate to Student Home Page or display success message
-        print('Student registration successful');
-        Navigator.pushReplacementNamed(context, '/studentHome'); // Example navigation
-      } else {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed, try again.')),
+          SnackBar(
+            content: Text('Registration successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to next page or reset form
+        _formKey.currentState?.reset();
+        _selectedState = null;
+        _selectedSpecialization = null;
+      } catch (e) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -132,23 +158,24 @@ class _StudentRegisterState extends State<StudentRegister> {
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _register,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    backgroundColor: Colors.green[700], // Use backgroundColor instead of primary
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: signUpStudent,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          backgroundColor: Colors.green[
+                              700], // Use backgroundColor instead of primary
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Register',
-                    style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -177,7 +204,7 @@ class _StudentRegisterState extends State<StudentRegister> {
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: (value) =>
-        value!.isEmpty ? 'Please enter your $labelText' : null,
+            value!.isEmpty ? 'Please enter your $labelText' : null,
       ),
     );
   }
@@ -205,10 +232,11 @@ class _StudentRegisterState extends State<StudentRegister> {
             borderRadius: BorderRadius.circular(10.0),
           ),
           contentPadding:
-          const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
         ),
-        validator: (value) =>
-        value == null || value == 'Select State' || value == 'Select Specialization'
+        validator: (value) => value == null ||
+                value == 'Select State' ||
+                value == 'Select Specialization'
             ? 'Please select $label'
             : null,
       ),

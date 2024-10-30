@@ -12,7 +12,12 @@
           "package_name": "com.example.e_agritech_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "851284674363-2uev18hhhgec5scdbhoqgsneqsi168fl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCLApj5Bogzxwk07Fos-PvwHqyJ6fsD4Zk"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "851284674363-2uev18hhhgec5scdbhoqgsneqsi168fl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
