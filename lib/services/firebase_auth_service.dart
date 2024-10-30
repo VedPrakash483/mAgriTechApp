@@ -1,15 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart'; // Import Flutter Material for ChangeNotifier
 import 'user_service.dart';
+import '/models/user_model.dart';
 
-class FirebaseAuthService {
+class FirebaseAuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final UserService _userService = UserService();
 
-  // Registers a user based on role (Student/Farmer)
   Future<User?> registerUser({
     required String email,
     required String password,
     required String name,
-    required String userType, // 'Student' or 'Farmer'
+    required String userType,
     String? aadhaarNumber,
     String? preferredLanguage,
     String? phone,
@@ -23,7 +25,7 @@ class FirebaseAuthService {
         password: password,
       );
 
-      await UserService().saveUserInfo(
+      UserModel userModel = UserModel(
         uid: userCredential.user?.uid ?? '',
         email: email,
         name: name,
@@ -36,39 +38,42 @@ class FirebaseAuthService {
         specialization: specialization,
       );
 
+      await _userService.saveUserInfo(userModel);
+
       print("Registration successful for user: ${userCredential.user?.email} as $userType");
+      notifyListeners(); // Notify listeners after registration
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      print("Registration Error: ${e.code} - ${e.message}");
+      print("FirebaseAuth Registration Error: ${e.code} - ${e.message}");
       return null;
     } catch (e) {
-      print("Registration Error: $e");
+      print("General Registration Error: $e");
       return null;
     }
   }
 
-  // Simple login method
   Future<User?> loginUser(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      notifyListeners(); // Notify listeners after login
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      print("Login Error: ${e.code} - ${e.message}");
+      print("FirebaseAuth Login Error: ${e.code} - ${e.message}");
       return null;
     } catch (e) {
-      print("Login Error: $e");
+      print("General Login Error: $e");
       return null;
     }
   }
 
-  // Signs out the user
   Future<void> signOutUser() async {
     try {
       await _auth.signOut();
       print("User signed out successfully");
+      notifyListeners(); // Notify listeners after sign out
     } catch (e) {
       print("Sign Out Error: $e");
     }

@@ -6,33 +6,22 @@ class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Save initial user information to Firestore upon registration
-  Future<void> saveUserInfo({
-    required String uid,
-    required String email,
-    required String name,
-    required String userType,
-    String? aadhaarNumber,
-    String? preferredLanguage,
-    String? phone,
-    String? location,
-    String? state,
-    String? specialization,
-  }) async {
-    UserModel userModel = UserModel(
-      uid: uid,
-      email: email,
-      name: name,
-      userType: userType,
-      aadhaarNumber: aadhaarNumber,
-      preferredLanguage: preferredLanguage,
-      phone: phone,
-      location: location,
-      state: state,
-      specialization: specialization,
-    );
+  Future<void> saveUserInfo(UserModel userModel) async {
+    await _firestore.collection('users').doc(userModel.uid).set(userModel.toMap());
+    print("User info saved successfully for ${userModel.email}");
+  }
 
-    await _firestore.collection('users').doc(uid).set(userModel.toMap());
-    print("User info saved successfully for $email");
+  // Get user information by UID
+  Future<UserModel?> getUserById(String uid) async {
+    try {
+      DocumentSnapshot snapshot = await _firestore.collection('users').doc(uid).get();
+      if (snapshot.exists) {
+        return UserModel.fromMap(snapshot.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+    return null; // Return null if user not found
   }
 
   // Save problem posted by farmer

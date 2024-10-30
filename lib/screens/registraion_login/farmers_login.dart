@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:e_agritech_app/components/rounded_button.dart';
 import 'package:e_agritech_app/components/input_field.dart';
 import 'package:e_agritech_app/screens/registraion_login/farmers_register.dart';
 import 'package:e_agritech_app/screens/user_registration_selection.dart';
+import 'package:e_agritech_app/services/firebase_auth_service.dart'; // Import your FirebaseAuthService
+import 'package:e_agritech_app/providers/auth_provider.dart'; // Ensure this points to your Provider class
 
 class FarmersLogin extends StatefulWidget {
-  const FarmersLogin({super.key});
+  const FarmersLogin({Key? key}) : super(key: key);
 
   @override
   State<FarmersLogin> createState() => _FarmersLoginState();
@@ -16,9 +18,6 @@ class FarmersLogin extends StatefulWidget {
 class _FarmersLoginState extends State<FarmersLogin>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
-
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   late AnimationController _animationController;
@@ -26,7 +25,6 @@ class _FarmersLoginState extends State<FarmersLogin>
   Animation<Offset>? _slideAnimation;
 
   bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -42,10 +40,7 @@ class _FarmersLoginState extends State<FarmersLogin>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _animationController,
       curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
     ));
@@ -91,102 +86,53 @@ class _FarmersLoginState extends State<FarmersLogin>
     );
   }
 
-  void _navigateToRegister() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const FarmersRegister(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
-
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
-  }
-
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      final user = await authProvider.loginUser(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
-      if (!mounted) return;
-
-      if (userDoc.data()?['userType'] == 'Farmer') {
-        _navigateToHome();
+        if (userDoc.data()?['userType'] == 'Farmer') {
+          _navigateToHome();
+        } else {
+          _showError('This account is not registered as a farmer.');
+        }
       } else {
-        setState(() {
-          _errorMessage = 'This account is not registered as a farmer.';
-        });
+        _showError('Login failed. Please check your credentials.');
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = _getFirebaseErrorMessage(e.code);
-      });
     } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
-      });
+      _showError(e.toString());
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  String _getFirebaseErrorMessage(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      default:
-        return 'Login failed. Please try again.';
-    }
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Make sure animations are initialized
-    if (_fadeAnimation == null || _slideAnimation == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Farmer Login',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Farmer Login', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
         backgroundColor: Colors.transparent,
         centerTitle: true,
@@ -203,24 +149,17 @@ class _FarmersLoginState extends State<FarmersLogin>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo Animation
                     TweenAnimationBuilder(
                       duration: const Duration(milliseconds: 800),
                       tween: Tween<double>(begin: 0, end: 1),
                       builder: (context, double value, child) {
                         return Transform.scale(
                           scale: value,
-                          child: Icon(
-                            Icons.agriculture,
-                            size: 80,
-                            color: Theme.of(context).primaryColor,
-                          ),
+                          child: Icon(Icons.agriculture, size: 80, color: Theme.of(context).primaryColor),
                         );
                       },
                     ),
-
                     const SizedBox(height: 24),
-
                     Text(
                       'Welcome Back!',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -229,19 +168,13 @@ class _FarmersLoginState extends State<FarmersLogin>
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'Login to access your farming dashboard',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 32),
-
                     InputField(
                       controller: _emailController,
                       hintText: 'Email Address',
@@ -251,16 +184,13 @@ class _FarmersLoginState extends State<FarmersLogin>
                         if (value?.isEmpty ?? true) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value!)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
                           return 'Please enter a valid email';
                         }
                         return null;
                       },
                     ),
-
                     const SizedBox(height: 16),
-
                     InputField(
                       controller: _passwordController,
                       hintText: 'Password',
@@ -273,7 +203,6 @@ class _FarmersLoginState extends State<FarmersLogin>
                         return null;
                       },
                     ),
-
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -282,33 +211,16 @@ class _FarmersLoginState extends State<FarmersLogin>
                         },
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                          ),
+                          style: TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ),
-
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
+                    const SizedBox(height: 16),
                     RoundedButton(
                       text: _isLoading ? 'Logging in...' : 'Login',
                       onPressed: _isLoading ? null : _login,
                     ),
-
                     const SizedBox(height: 24),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -317,18 +229,16 @@ class _FarmersLoginState extends State<FarmersLogin>
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         TextButton(
-                          onPressed: _navigateToRegister,
+                          onPressed: () {
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FarmersRegister()));
+                          },
                           child: Text(
                             'Register',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
-
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: TextButton.icon(
@@ -337,9 +247,7 @@ class _FarmersLoginState extends State<FarmersLogin>
                         },
                         icon: const Icon(Icons.language),
                         label: const Text('Change Language'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey[600],
-                        ),
+                        style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
                       ),
                     ),
                   ],
