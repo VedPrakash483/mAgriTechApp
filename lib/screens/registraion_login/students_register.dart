@@ -1,6 +1,10 @@
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:e_agritech_app/services/firebase_auth_service.dart';
+import 'package:e_agritech_app/models/user_model.dart'; // Import the UserModel for type usage
+import 'package:e_agritech_app/providers/auth_provider.dart'; // Import your AuthProvider if you have one
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({Key? key}) : super(key: key);
@@ -14,19 +18,18 @@ class _StudentRegisterState extends State<StudentRegister> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-
   final TextEditingController _passwordController = TextEditingController();
-  
+
   // comments by asad
   // first make a instance of FirebaseAuthService
   /// then make a function of [signUpStudent]
   // then call that function in button click event
 
-
   final FirebaseAuthService _authService = FirebaseAuthService();
 
   String? _selectedState;
   String? _selectedSpecialization;
+  bool _isLoading = false;
 
   final List<String> _states = [
     'Select State',
@@ -34,7 +37,6 @@ class _StudentRegisterState extends State<StudentRegister> {
     'Maharashtra',
     'Karnataka',
     'Tamil Nadu',
-    // Add more states as needed
   ];
 
   final List<String> _specializations = [
@@ -60,7 +62,7 @@ class _StudentRegisterState extends State<StudentRegister> {
           userType: "student",
         );
 
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop(); // Close loading dialog
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -92,81 +94,151 @@ class _StudentRegisterState extends State<StudentRegister> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Registration'),
+        title: const Text(
+          'Student Registration',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green[700],
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter your name' : null,
-              ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter your email' : null,
-              ),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter your phone number' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedState,
-                hint: const Text('Select State'),
-                items: _states.map((String state) {
-                  return DropdownMenuItem<String>(
-                    value: state,
-                    child: Text(state),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedState = value;
-                  });
-                },
-                validator: (value) =>
-                    value == null ? 'Please select a state' : null,
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedSpecialization,
-                hint: const Text('Select Specialization'),
-                items: _specializations.map((String specialization) {
-                  return DropdownMenuItem<String>(
-                    value: specialization,
-                    child: Text(specialization),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedSpecialization = value;
-                  });
-                },
-                validator: (value) =>
-                    value == null ? 'Please select a specialization' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter your password' : null,
-              ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: signUpStudent,
-                child: const Text('Register'),
+              Text(
+                'Register as a Student',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
               ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                controller: _nameController,
+                labelText: 'Name',
+                icon: Icons.person,
+              ),
+              _buildTextField(
+                controller: _emailController,
+                labelText: 'Email',
+                icon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              _buildTextField(
+                controller: _phoneController,
+                labelText: 'Phone Number',
+                icon: Icons.phone,
+                keyboardType: TextInputType.phone,
+              ),
+              _buildDropdown(
+                label: 'Select State',
+                items: _states,
+                value: _selectedState,
+                onChanged: (value) => setState(() => _selectedState = value),
+              ),
+              _buildDropdown(
+                label: 'Select Specialization',
+                items: _specializations,
+                value: _selectedSpecialization,
+                onChanged: (value) =>
+                    setState(() => _selectedSpecialization = value),
+              ),
+              _buildTextField(
+                controller: _passwordController,
+                labelText: 'Password',
+                icon: Icons.lock,
+                obscureText: true,
+              ),
+              const SizedBox(height: 30),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: signUpStudent,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          backgroundColor: Colors.green[
+                              700], // Use backgroundColor instead of primary
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+        ),
+        keyboardType: keyboardType,
+        obscureText: obscureText,
+        validator: (value) =>
+            value!.isEmpty ? 'Please enter your $labelText' : null,
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required List<String> items,
+    required String? value,
+    required Function(String?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        hint: Text(label),
+        items: items.map((String item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+        ),
+        validator: (value) => value == null ||
+                value == 'Select State' ||
+                value == 'Select Specialization'
+            ? 'Please select $label'
+            : null,
       ),
     );
   }
