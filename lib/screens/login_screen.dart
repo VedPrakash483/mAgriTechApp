@@ -4,6 +4,8 @@ import '../components/input_field.dart';
 import '../components/rounded_button.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -24,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
     );
     _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
     _animationController.forward();
@@ -90,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 60),
-                        Text(
+                        const Text(
                           'Welcome Back!',
                           style: TextStyle(
                             color: Colors.white,
@@ -100,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 10),
-                        Text(
+                        const Text(
                           'Login to continue',
                           style: TextStyle(
                             color: Colors.white70,
@@ -128,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
                               _errorMessage!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.redAccent,
                                 fontSize: 14,
                               ),
@@ -144,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           onPressed: () {
                             Navigator.pushNamed(context, '/forgot_password');
                           },
-                          child: Text(
+                          child: const Text(
                             'Forgot Password?',
                             style: TextStyle(color: Colors.white),
                           ),
@@ -161,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               onTap: () {
                                 Navigator.pushNamed(context, '/register');
                               },
-                              child: Text(
+                              child: const Text(
                                 'Register',
                                 style: TextStyle(
                                   color: Colors.white,

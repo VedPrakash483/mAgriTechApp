@@ -47,6 +47,7 @@ android {
         targetSdkVersion 34 // or your current version
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     buildTypes {
