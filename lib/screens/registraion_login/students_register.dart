@@ -60,6 +60,8 @@ class _StudentRegisterState extends State<StudentRegister> {
           password: _passwordController.text.trim(),
           name: _nameController.text.trim(),
           userType: "student",
+          phone: _phoneController.text.trim(),
+          specialization: _selectedSpecialization,
         );
 
         Navigator.of(context).pop(); // Close loading dialog
