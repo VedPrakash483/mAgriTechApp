@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/components/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -51,7 +52,8 @@ class _FarmersRegisterState extends State<FarmersRegister> {
         desiredAccuracy: LocationAccuracy.high,
       );
       setState(() {
-        _locationController.text = "${position.latitude}, ${position.longitude}";
+        _locationController.text =
+            "${position.latitude}, ${position.longitude}";
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -106,16 +108,16 @@ class _FarmersRegisterState extends State<FarmersRegister> {
           prefixIcon: Icon(icon, color: Colors.green.shade700),
           suffixIcon: isPassword
               ? IconButton(
-            icon: Icon(
-              _obscurePassword ? Icons.visibility : Icons.visibility_off,
-              color: Colors.green.shade700,
-            ),
-            onPressed: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
-          )
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.green.shade700,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                )
               : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -225,9 +227,11 @@ class _FarmersRegisterState extends State<FarmersRegister> {
                     label: 'Full Name',
                     hint: 'Enter your full name',
                     icon: Icons.person,
-                    validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter your name' : null,
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please enter your name'
+                        : null,
                   ),
+      
                   _buildInputField(
                     controller: _aadhaarController,
                     label: 'Aadhaar Number',
@@ -235,7 +239,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
                     icon: Icons.credit_card,
                     keyboardType: TextInputType.number,
                     validator: (value) =>
-                    value?.length != 12 ? 'Invalid Aadhaar number' : null,
+                        value?.length != 12 ? 'Invalid Aadhaar number' : null,
                   ),
                   _buildInputField(
                     controller: _phoneController,
@@ -244,7 +248,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
                     icon: Icons.phone,
                     keyboardType: TextInputType.phone,
                     validator: (value) =>
-                    value?.length != 10 ? 'Invalid phone number' : null,
+                        value?.length != 10 ? 'Invalid phone number' : null,
                   ),
                   _buildDropdown(
                     label: 'State',

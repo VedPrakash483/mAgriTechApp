@@ -4,7 +4,7 @@ class ProblemModel {
   final String farmerId;
   final String assistanceType; // Medical or Farm
   final String description;
-  final String? audioUrl;
+  final String? audioUrl; 
   final String? imageUrl;
   final String categoryTag;
   final String location;

@@ -1,14 +1,15 @@
 import 'package:e_agritech_app/farmer/dashboard.dart';
+import 'package:e_agritech_app/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/welcome_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  DefaultFirebaseOptions.currentPlatform;
   await Firebase.initializeApp();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: DashboardScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }
