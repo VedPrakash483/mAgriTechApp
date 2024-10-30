@@ -38,6 +38,9 @@ class FirebaseAuthService {
 
       print("Registration successful for user: ${userCredential.user?.email} as $userType");
       return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      print("Registration Error: ${e.code} - ${e.message}");
+      return null;
     } catch (e) {
       print("Registration Error: $e");
       return null;
@@ -52,6 +55,9 @@ class FirebaseAuthService {
         password: password,
       );
       return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      print("Login Error: ${e.code} - ${e.message}");
+      return null;
     } catch (e) {
       print("Login Error: $e");
       return null;
