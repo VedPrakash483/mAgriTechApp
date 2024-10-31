@@ -1,10 +1,5 @@
-import 'package:e_agritech_app/services/firebase_auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
-import 'package:e_agritech_app/models/user_model.dart'; // Import the UserModel for type usage
-import 'package:e_agritech_app/providers/auth_provider.dart'; // Import your AuthProvider if you have one
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({Key? key}) : super(key: key);
@@ -19,11 +14,6 @@ class _StudentRegisterState extends State<StudentRegister> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  // comments by asad
-  // first make a instance of FirebaseAuthService
-  /// then make a function of [signUpStudent]
-  // then call that function in button click event
 
   final FirebaseAuthService _authService = FirebaseAuthService();
 
@@ -47,47 +37,46 @@ class _StudentRegisterState extends State<StudentRegister> {
 
   void signUpStudent() async {
     if (_formKey.currentState!.validate()) {
-      // Display loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(child: CircularProgressIndicator()),
-      );
+      setState(() => _isLoading = true);
 
       try {
         await _authService.registerUser(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
-          name: _nameController.text.trim(),
-          userType: "student",
+
+         
+
+          userType: "Student",
           phone: _phoneController.text.trim(),
+          state: _selectedState,
+
           specialization: _selectedSpecialization,
         );
 
-        Navigator.of(context).pop(); // Close loading dialog
-
-        // Show success message
+        // Registration successful
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Registration successful!'),
             backgroundColor: Colors.green,
           ),
         );
 
-        // Navigate to next page or reset form
-        _formKey.currentState?.reset();
-        _selectedState = null;
-        _selectedSpecialization = null;
+        // Navigate or reset form
+        setState(() {
+          _isLoading = false;
+          _formKey.currentState?.reset();
+          _selectedState = null;
+          _selectedSpecialization = null;
+        });
       } catch (e) {
-        Navigator.of(context).pop(); // Close loading dialog
-
-        // Show error message
+        // Display error message for specific exceptions
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration failed: $e'),
+            content: Text(e.toString()),
             backgroundColor: Colors.red,
           ),
         );
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -160,24 +149,23 @@ class _StudentRegisterState extends State<StudentRegister> {
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: signUpStudent,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          backgroundColor: Colors.green[
-                              700], // Use backgroundColor instead of primary
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                        ),
-                        child: const Text(
-                          'Register',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: signUpStudent,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    backgroundColor: Colors.green[700],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
+                  ),
+                  child: const Text(
+                    'Register',
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -206,7 +194,7 @@ class _StudentRegisterState extends State<StudentRegister> {
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: (value) =>
-            value!.isEmpty ? 'Please enter your $labelText' : null,
+        value!.isEmpty ? 'Please enter your $labelText' : null,
       ),
     );
   }
@@ -234,11 +222,11 @@ class _StudentRegisterState extends State<StudentRegister> {
             borderRadius: BorderRadius.circular(10.0),
           ),
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+          const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
         ),
         validator: (value) => value == null ||
-                value == 'Select State' ||
-                value == 'Select Specialization'
+            value == 'Select State' ||
+            value == 'Select Specialization'
             ? 'Please select $label'
             : null,
       ),
