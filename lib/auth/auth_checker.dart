@@ -1,5 +1,4 @@
 import 'package:e_agritech_app/farmer/dashboard.dart';
-import 'package:e_agritech_app/screens/registraion_login/farmers_login.dart';
 import 'package:e_agritech_app/screens/welcome_screen.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';

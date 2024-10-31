@@ -24,7 +24,7 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   final _formKey = GlobalKey<FormState>();
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
-  final _record = Record;
+  // final _record = Record;
 
   String _assistanceType = '';
   String _description = '';
