@@ -1,4 +1,5 @@
 import 'package:e_agritech_app/farmer/dashboard.dart';
+import 'package:e_agritech_app/farmer/problem_detail_screen.dart';
 import 'package:e_agritech_app/firebase_options.dart';
 import 'package:e_agritech_app/student/home_page_student.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
           fontFamily: GoogleFonts.poppins().fontFamily,
         ),
-        home: const HomePageStudent(),
+        home: const WelcomeScreen(),
       ),
     );
   }

@@ -1,4 +1,5 @@
-import 'package:e_agritech_app/components/input_field.dart'; 
+import 'package:e_agritech_app/screens/registraion_login/farmers_login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
@@ -47,7 +48,9 @@ class _FarmersRegisterState extends State<FarmersRegister> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
   }
 
   Future<void> _register() async {
@@ -81,9 +84,41 @@ class _FarmersRegisterState extends State<FarmersRegister> {
           );
           await UserService().saveUserInfo(registeredUser);
 
-          Navigator.pop(context);
+          if (user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to login page after successful registration
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => FarmersLogin()), // Update to your login page
+          );
+        }
+
+          // Navigate to login screen after a delay for user to read the message
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.pop(context); // Navigate back to the login screen
+          });
         } else {
           _showSnackBar('Registration failed', Colors.red);
+        }
+      } on FirebaseAuthException catch (e) {
+        switch (e.code) {
+          case 'email-already-in-use':
+            _showSnackBar('Email already exists.', Colors.red);
+            break;
+          case 'invalid-email':
+            _showSnackBar('Invalid email format.', Colors.red);
+            break;
+          case 'weak-password':
+            _showSnackBar('Password is too weak.', Colors.red);
+            break;
+          default:
+            _showSnackBar('Registration failed. Please try again.', Colors.red);
         }
       } catch (e) {
         _showSnackBar('Registration error: $e', Colors.red);
