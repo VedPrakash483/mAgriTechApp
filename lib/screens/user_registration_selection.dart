@@ -16,31 +16,35 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
   int? _selectedOption;
+  int? _hoveredIndex;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1800),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
+    _fadeAnimation = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-    ));
+      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+    );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.35),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
     ));
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.8, curve: Curves.easeOutBack),
+    );
 
     _controller.forward();
   }
@@ -57,18 +61,20 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => screen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
+          var curve = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
+          return FadeTransition(
+            opacity: curve,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.95, end: 1.0).animate(curve),
+              child: child,
+            ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 600),
       ),
     );
   }
@@ -79,31 +85,54 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.8),
-              Theme.of(context).primaryColor.withOpacity(0.3),
+              Theme.of(context).primaryColor.withOpacity(0.9),
+              Theme.of(context).primaryColor.withOpacity(0.4),
+              Theme.of(context).primaryColor.withOpacity(0.2),
             ],
+            stops: const [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              ScaleTransition(
+                scale: Tween<double>(begin: 0.8, end: 1.0).animate(_scaleAnimation),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: Text(
-                    "Choose Your Path",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 40, 16, 20),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 80,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Join Our Community",
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Choose your role to get started",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
@@ -120,30 +149,31 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
                       children: [
                         _buildSelectionCard(
                           0,
-                          'Student',
-                          'Access educational resources and connect with farmers',
-                          Icons.school,
-                              () => _navigateToScreen(
-                            context,
-                            StudentRegister(),
-                          ),
+                          'Join as Student',
+                          'Learn from experienced farmers and access resources',
+                          Icons.school_outlined,
+                          () => _navigateToScreen(context, StudentRegister()),
                         ),
                         const SizedBox(height: 20),
                         _buildSelectionCard(
                           1,
-                          'Farmer',
-                          'Share your knowledge and connect with students',
-                          Icons.agriculture,
-                              () => _navigateToScreen(
-                            context,
-                            FarmersRegister(),
-                          ),
+                          'Join as Farmer',
+                          'Share your expertise and connect with learners',
+                          Icons.agriculture_outlined,
+                          () => _navigateToScreen(context, FarmersRegister()),
                         ),
-                        const SizedBox(height: 40),
-                        _buildLoginButton(),
                       ],
                     ),
                   ),
+                ),
+              ),
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  children: [
+                    _buildLoginButton(),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ],
@@ -153,105 +183,141 @@ class _UserSelectionScreenState extends State<UserSelectionScreen>
     );
   }
 
-  Widget _buildSelectionCard(int index, String title, String description,
-      IconData icon, VoidCallback onPressed) {
+  Widget _buildSelectionCard(
+      int index, String title, String description, IconData icon, VoidCallback onPressed) {
     final isSelected = _selectedOption == index;
+    final isHovered = _hoveredIndex == index;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() => _selectedOption = index);
-        Future.delayed(const Duration(milliseconds: 200), onPressed);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-          border: Border.all(
-            color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
-            width: 2,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hoveredIndex = index),
+      onExit: (_) => setState(() => _hoveredIndex = null),
+      child: GestureDetector(
+        onTap: () {
+          setState(() => _selectedOption = index);
+          Future.delayed(const Duration(milliseconds: 200), onPressed);
+        },
+        child: TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 200),
+          tween: Tween<double>(
+            begin: 0,
+            end: isSelected || isHovered ? 1 : 0,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 30,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: 1 + (0.02 * value),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                      spreadRadius: 2,
                     ),
+                  ],
+                  border: Border.all(
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.transparent,
+                    width: 2,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 32,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: Theme.of(context).primaryColor.withOpacity(0.5),
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildLoginButton() {
-    return TextButton(
-      onPressed: () => _navigateToScreen(context, UserLoginSelection()),
-      child: RichText(
-        text: TextSpan(
-          text: 'Already have an account? ',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-          ),
-          children: [
-            TextSpan(
-              text: 'Login',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                decorationColor: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ],
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: TextButton(
+        onPressed: () => _navigateToScreen(context, const UserLoginSelection()),
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: Size.zero,
+        ),
+        child: RichText(
+          text: TextSpan(
+            text: 'Already have an account? ',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
             ),
-          ],
+            children: [
+              TextSpan(
+                text: 'Login',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white,
+                  decorationThickness: 2,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.3),
+                      offset: const Offset(0, 1),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
