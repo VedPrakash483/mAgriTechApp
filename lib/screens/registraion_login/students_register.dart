@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
+import 'package:e_agritech_app/screens/registraion_login/student_login.dart'; // Import your login page
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({Key? key}) : super(key: key);
@@ -14,20 +16,44 @@ class _StudentRegisterState extends State<StudentRegister> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final FirebaseAuthService _authService = FirebaseAuthService();
 
   String? _selectedState;
   String? _selectedSpecialization;
   bool _isLoading = false;
 
-  final List<String> _states = [
-    'Select State',
-    'Andhra Pradesh',
-    'Maharashtra',
-    'Karnataka',
-    'Tamil Nadu',
-  ];
+final List<String> _states = [
+  'Select State',
+  'Andhra Pradesh',
+  'Maharashtra',
+  'Karnataka',
+  'Tamil Nadu',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Kerala',
+  'Madhya Pradesh',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+];
+
 
   final List<String> _specializations = [
     'Select Specialization',
@@ -40,7 +66,7 @@ class _StudentRegisterState extends State<StudentRegister> {
       setState(() => _isLoading = true);
 
       try {
-        await _authService.registerUser(
+        var user = await _authService.registerUser(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           name: _nameController.text.trim(),
@@ -50,29 +76,42 @@ class _StudentRegisterState extends State<StudentRegister> {
           specialization: _selectedSpecialization,
         );
 
-        // Registration successful
+        if (user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to login page after successful registration
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => StudentsLogin()), // Update to your login page
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'An error occurred';
+        if (e.code == 'email-already-in-use') {
+          errorMessage = 'Email already exists.';
+        } else if (e.code == 'weak-password') {
+          errorMessage = 'Password should be at least 6 characters.';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
           ),
         );
-
-        // Navigate or reset form
-        setState(() {
-          _isLoading = false;
-          _formKey.currentState?.reset();
-          _selectedState = null;
-          _selectedSpecialization = null;
-        });
       } catch (e) {
-        // Display error message for specific exceptions
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: Colors.red,
           ),
         );
+      } finally {
         setState(() => _isLoading = false);
       }
     }
@@ -133,8 +172,7 @@ class _StudentRegisterState extends State<StudentRegister> {
                 label: 'Select Specialization',
                 items: _specializations,
                 value: _selectedSpecialization,
-                onChanged: (value) =>
-                    setState(() => _selectedSpecialization = value),
+                onChanged: (value) => setState(() => _selectedSpecialization = value),
               ),
               _buildTextField(
                 controller: _passwordController,
@@ -142,27 +180,32 @@ class _StudentRegisterState extends State<StudentRegister> {
                 icon: Icons.lock,
                 obscureText: true,
               ),
+              _buildTextField(
+                controller: _confirmPasswordController,
+                labelText: 'Confirm Password',
+                icon: Icons.lock,
+                obscureText: true,
+              ),
               const SizedBox(height: 30),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: signUpStudent,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    backgroundColor: Colors.green[700],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: signUpStudent,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          backgroundColor: Colors.green[700],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -190,8 +233,7 @@ class _StudentRegisterState extends State<StudentRegister> {
         ),
         keyboardType: keyboardType,
         obscureText: obscureText,
-        validator: (value) =>
-        value!.isEmpty ? 'Please enter your $labelText' : null,
+        validator: (value) => value!.isEmpty ? 'Please enter your $labelText' : null,
       ),
     );
   }
@@ -218,12 +260,9 @@ class _StudentRegisterState extends State<StudentRegister> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
-          contentPadding:
-          const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+          contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
         ),
-        validator: (value) => value == null ||
-            value == 'Select State' ||
-            value == 'Select Specialization'
+        validator: (value) => value == null || value == 'Select State' || value == 'Select Specialization'
             ? 'Please select $label'
             : null,
       ),

@@ -1,4 +1,3 @@
-import 'package:e_agritech_app/components/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
@@ -18,7 +17,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
   final _aadhaarController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
-  final _emailController = TextEditingController(); // Added Email Controller
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -52,44 +51,35 @@ class _FarmersRegisterState extends State<FarmersRegister> {
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      final newUser = UserModel(
-        uid: '',
-        aadhaarNumber: _aadhaarController.text,
-        name: _nameController.text,
-        userType: 'Farmer',
-        preferredLanguage: _selectedLanguage,
-        phone: _phoneController.text,
-        location: _locationController.text,
-        state: _selectedState,
-        email: _emailController.text, // Added Email to UserModel
-      );
-
       try {
+        // Register the farmer with Firebase Authentication
         final user = await FirebaseAuthService().registerUser(
-          email: newUser.email!, // Use email from the UserModel
-          password: _passwordController.text,
-          name: newUser.name,
-          userType: newUser.userType,
-          aadhaarNumber: newUser.aadhaarNumber,
-          preferredLanguage: newUser.preferredLanguage,
-          phone: newUser.phone,
-          location: newUser.location,
-          state: newUser.state,
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          name: _nameController.text.trim(),
+          userType: "Farmer",
+          aadhaarNumber: _aadhaarController.text.trim(),
+          preferredLanguage: _selectedLanguage,
+          phone: _phoneController.text.trim(),
+          location: _locationController.text.trim(),
+          state: _selectedState,
         );
 
         if (user != null) {
+          // Save the user data in Firestore
           final registeredUser = UserModel(
             uid: user.uid,
-            email: newUser.email,
-            name: newUser.name,
-            userType: newUser.userType,
-            aadhaarNumber: newUser.aadhaarNumber,
-            preferredLanguage: newUser.preferredLanguage,
-            phone: newUser.phone,
-            location: newUser.location,
-            state: newUser.state,
+            email: _emailController.text.trim(),
+            name: _nameController.text.trim(),
+            userType: "Farmer",
+            aadhaarNumber: _aadhaarController.text.trim(),
+            preferredLanguage: _selectedLanguage,
+            phone: _phoneController.text.trim(),
+            location: _locationController.text.trim(),
+            state: _selectedState,
           );
           await UserService().saveUserInfo(registeredUser);
+
           Navigator.pop(context);
         } else {
           _showSnackBar('Registration failed', Colors.red);
@@ -204,7 +194,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
               const SizedBox(height: 10),
 
               _buildInputField(
-                controller: _emailController, // Added Email Input Field
+                controller: _emailController,
                 label: 'Email',
                 hint: 'Enter email',
                 icon: Icons.email,
