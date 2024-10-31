@@ -31,13 +31,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          // if (snapshot.connectionState == ConnectionState.waiting) {
-          //   return const Center(child: CircularProgressIndicator());
-          // }
+          // Handle loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          // if (snapshot.hasError) {
-          //   return Center(child: Text('Error: ${snapshot.error}'));
-          // }
+          // Handle error state
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // Handle null or empty data
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No problems found'));
+          }
 
           List<ProblemModel> problems = snapshot.data!.docs
               .map((doc) =>
