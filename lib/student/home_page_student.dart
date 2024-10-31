@@ -1,7 +1,23 @@
+import 'package:e_agritech_app/services/firebase_auth_service.dart';
 import 'package:flutter/material.dart';
 
-class HomePageStudent extends StatelessWidget {
+class HomePageStudent extends StatefulWidget {
   const HomePageStudent({super.key});
+
+  @override
+  State<HomePageStudent> createState() => _HomePageStudentState();
+}
+
+class _HomePageStudentState extends State<HomePageStudent> {
+  final FirebaseAuthService _authService = FirebaseAuthService();
+
+  void signOut() async {
+    try {
+      await _authService.signOutUser();
+    } catch (e) {
+      debugPrint("Errot :$e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +29,10 @@ class HomePageStudent extends StatelessWidget {
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () {
+              signOut();
+            },
           ),
         ],
       ),

@@ -10,7 +10,7 @@ import 'package:e_agritech_app/components/custom_dropdown.dart';
 import 'package:e_agritech_app/components/custom_test_field.dart';
 
 class FarmersRegister extends StatefulWidget {
-  const FarmersRegister({Key? key}) : super(key: key);
+  const FarmersRegister({super.key});
 
   @override
   _FarmersRegisterState createState() => _FarmersRegisterState();

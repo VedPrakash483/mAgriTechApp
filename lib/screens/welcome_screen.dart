@@ -144,7 +144,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 colors: [
                   Theme.of(context).primaryColor,
                   Theme.of(context).primaryColor.withGreen(
-                        (Theme.of(context).primaryColor.green + 40).clamp(0, 255),
+                        (Theme.of(context).primaryColor.green + 40)
+                            .clamp(0, 255),
                       ),
                 ],
               ),
@@ -197,7 +198,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     ],
                                   ),
                                   child: Image.asset(
-                                    'assets/logo.png',
+                                    'assets/seedling.png',
                                     height: 120,
                                     width: 120,
                                   ),

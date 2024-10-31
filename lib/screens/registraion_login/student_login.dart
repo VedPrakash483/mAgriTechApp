@@ -40,7 +40,8 @@ class _StudentsLoginState extends State<StudentsLogin>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+    _fadeAnimation =
+        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _animationController,
       curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
     ));
@@ -68,13 +69,15 @@ class _StudentsLoginState extends State<StudentsLogin>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const UserSelectionScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const UserSelectionScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
           return SlideTransition(
             position: animation.drive(tween),
@@ -86,6 +89,8 @@ class _StudentsLoginState extends State<StudentsLogin>
     );
   }
 
+  final FirebaseAuthService _authService = FirebaseAuthService();
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -93,22 +98,17 @@ class _StudentsLoginState extends State<StudentsLogin>
       _isLoading = true;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<FirebaseAuthService>(context, listen: false);
 
     try {
-      final user = await authProvider.loginUser(
+      final user = await _authService.loginUser(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
       if (user != null) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-
-        if (userDoc.data()?['userType'] == 'Student') { // Check for student userType
-          _navigateToHome();
-        } else {
-          _showError('This account is not registered as a student.');
-        }
+        print("login successful");
       } else {
         _showError('Login failed. Please check your credentials.');
       }
@@ -132,7 +132,8 @@ class _StudentsLoginState extends State<StudentsLogin>
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Student Login', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Student Login',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
         backgroundColor: Colors.transparent,
         centerTitle: true,
@@ -155,23 +156,30 @@ class _StudentsLoginState extends State<StudentsLogin>
                       builder: (context, double value, child) {
                         return Transform.scale(
                           scale: value,
-                          child: Icon(Icons.school, size: 80, color: Theme.of(context).primaryColor), // Change icon to something student-related
+                          child: Icon(Icons.school,
+                              size: 80,
+                              color: Theme.of(context)
+                                  .primaryColor), // Change icon to something student-related
                         );
                       },
                     ),
                     const SizedBox(height: 24),
                     Text(
                       'Welcome Back!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Login to access your student dashboard',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
@@ -184,7 +192,8 @@ class _StudentsLoginState extends State<StudentsLogin>
                         if (value?.isEmpty ?? true) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value!)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -211,7 +220,8 @@ class _StudentsLoginState extends State<StudentsLogin>
                         },
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(color: Theme.of(context).primaryColor),
+                          style:
+                              TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ),
@@ -230,11 +240,17 @@ class _StudentsLoginState extends State<StudentsLogin>
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const StudentRegister()));
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const StudentRegister()));
                           },
                           child: Text(
                             'Register',
-                            style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -247,7 +263,8 @@ class _StudentsLoginState extends State<StudentsLogin>
                         },
                         icon: const Icon(Icons.language),
                         label: const Text('Change Language'),
-                        style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey[600]),
                       ),
                     ),
                   ],
