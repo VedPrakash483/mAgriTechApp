@@ -75,6 +75,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
           phone: newUser.phone,
           location: newUser.location,
           state: newUser.state,
+          specialization: "",
         );
 
         if (user != null) {
