@@ -25,12 +25,12 @@ class FirebaseAuthService extends ChangeNotifier {
     required String password,
     required String name,
     required String userType,
-     String? aadhaarNumber,
+    String? aadhaarNumber,
     String? preferredLanguage,
-    required String? phone,
+    String? phone,
     String? location,
-     String? state,
-    required String? specialization,
+    String? state,
+    String? specialization,
   }) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(

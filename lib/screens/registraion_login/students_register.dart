@@ -23,37 +23,13 @@ class _StudentRegisterState extends State<StudentRegister> {
   String? _selectedSpecialization;
   bool _isLoading = false;
 
-final List<String> _states = [
-  'Select State',
-  'Andhra Pradesh',
-  'Maharashtra',
-  'Karnataka',
-  'Tamil Nadu',
-  'Arunachal Pradesh',
-  'Assam',
-  'Bihar',
-  'Chhattisgarh',
-  'Goa',
-  'Gujarat',
-  'Haryana',
-  'Himachal Pradesh',
-  'Jharkhand',
-  'Kerala',
-  'Madhya Pradesh',
-  'Mizoram',
-  'Nagaland',
-  'Odisha',
-  'Punjab',
-  'Rajasthan',
-  'Sikkim',
-  'Tamil Nadu',
-  'Telangana',
-  'Tripura',
-  'Uttar Pradesh',
-  'Uttarakhand',
-  'West Bengal',
-];
-
+  final List<String> _states = [
+    'Select State',
+    'Andhra Pradesh',
+    'Maharashtra',
+    'Karnataka',
+    'Tamil Nadu',
+  ];
 
   final List<String> _specializations = [
     'Select Specialization',
@@ -69,13 +45,10 @@ final List<String> _states = [
         var user = await _authService.registerUser(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
-
-         
-
+          name: _nameController.text.trim(),
           userType: "Student",
           phone: _phoneController.text.trim(),
           state: _selectedState,
-
           specialization: _selectedSpecialization,
         );
 
