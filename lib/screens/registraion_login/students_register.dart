@@ -69,10 +69,13 @@ final List<String> _states = [
         var user = await _authService.registerUser(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
-          name: _nameController.text.trim(),
+
+         
+
           userType: "Student",
           phone: _phoneController.text.trim(),
           state: _selectedState,
+
           specialization: _selectedSpecialization,
         );
 
