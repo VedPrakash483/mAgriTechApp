@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/auth/auth_checker.dart';
 import 'package:e_agritech_app/farmer/dashboard.dart';
 import 'package:e_agritech_app/farmer/problem_detail_screen.dart';
 import 'package:e_agritech_app/firebase_options.dart';
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
           fontFamily: GoogleFonts.poppins().fontFamily,
         ),
-        home: const WelcomeScreen(),
+        home: const AuthChecker(),
       ),
     );
   }

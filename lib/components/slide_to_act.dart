@@ -5,10 +5,10 @@ class SlideToActButton extends StatefulWidget {
   final String text;
 
   const SlideToActButton({
-    Key? key,
+    super.key,
     required this.onSlideCompleted,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
   State<SlideToActButton> createState() => _SlideToActButtonState();
