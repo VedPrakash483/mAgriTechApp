@@ -18,6 +18,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
   final _aadhaarController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
+  final _emailController = TextEditingController(); // Added Email Controller
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -37,8 +38,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
     try {
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
-        _locationController.text =
-            "${position.latitude}, ${position.longitude}";
+        _locationController.text = "${position.latitude}, ${position.longitude}";
       });
       _showSnackBar('Location updated', Colors.green);
     } catch (e) {
@@ -54,19 +54,19 @@ class _FarmersRegisterState extends State<FarmersRegister> {
     if (_formKey.currentState!.validate()) {
       final newUser = UserModel(
         uid: '',
-        email: _aadhaarController.text,
+        aadhaarNumber: _aadhaarController.text,
         name: _nameController.text,
         userType: 'Farmer',
-        aadhaarNumber: _aadhaarController.text,
         preferredLanguage: _selectedLanguage,
         phone: _phoneController.text,
         location: _locationController.text,
         state: _selectedState,
+        email: _emailController.text, // Added Email to UserModel
       );
 
       try {
         final user = await FirebaseAuthService().registerUser(
-          email: newUser.email,
+          email: newUser.email!, // Use email from the UserModel
           password: _passwordController.text,
           name: newUser.name,
           userType: newUser.userType,
@@ -167,7 +167,6 @@ class _FarmersRegisterState extends State<FarmersRegister> {
           key: _formKey,
           child: ListView(
             children: [
-              // Adding a title and spacing
               Center(
                 child: Text(
                   'Register as a Farmer',
@@ -205,6 +204,15 @@ class _FarmersRegisterState extends State<FarmersRegister> {
               const SizedBox(height: 10),
 
               _buildInputField(
+                controller: _emailController, // Added Email Input Field
+                label: 'Email',
+                hint: 'Enter email',
+                icon: Icons.email,
+                validator: (value) => value?.isEmpty ?? true ? 'Enter email' : null,
+              ),
+              const SizedBox(height: 10),
+
+              _buildInputField(
                 controller: _locationController,
                 label: 'Location',
                 hint: 'Auto-filled',
@@ -217,7 +225,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
                 onPressed: _getCurrentLocation,
                 child: const Text('Get Location'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[800], // Changed from primary to backgroundColor
+                  backgroundColor: Colors.green[800],
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -254,7 +262,7 @@ class _FarmersRegisterState extends State<FarmersRegister> {
                 onPressed: _register,
                 child: const Text('Register'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[800], // Changed from primary to backgroundColor
+                  backgroundColor: Colors.green[800],
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),

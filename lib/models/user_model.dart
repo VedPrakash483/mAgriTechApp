@@ -1,6 +1,6 @@
 class UserModel {
   final String uid;
-  final String email;
+  final String? email;
   final String name;
   final String userType; // Either 'Student' or 'Farmer'
   final String? aadhaarNumber;
@@ -13,9 +13,9 @@ class UserModel {
   // Constructor
   UserModel({
     required this.uid,
-    required this.email,
     required this.name,
     required this.userType,
+    this.email,
     this.aadhaarNumber,
     this.preferredLanguage,
     this.phone,
