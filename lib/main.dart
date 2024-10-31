@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
           fontFamily: GoogleFonts.poppins().fontFamily,
         ),
-        home: const DashboardScreen(),
+        home: const WelcomeScreen(),
       ),
     );
   }
