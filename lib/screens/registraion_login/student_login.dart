@@ -9,7 +9,7 @@ import 'package:e_agritech_app/services/firebase_auth_service.dart'; // Import y
 import 'package:e_agritech_app/providers/auth_provider.dart'; // Ensure this points to your Provider class
 
 class StudentsLogin extends StatefulWidget {
-  const StudentsLogin({Key? key}) : super(key: key);
+  const StudentsLogin({super.key});
 
   @override
   State<StudentsLogin> createState() => _StudentsLoginState();

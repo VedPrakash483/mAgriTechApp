@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'registraion_login/farmers_login.dart';
 import 'registraion_login/student_login.dart';
-
 class UserLoginSelection extends StatefulWidget {
   const UserLoginSelection({super.key});
 
@@ -99,7 +98,8 @@ class _UserLoginSelectionState extends State<UserLoginSelection>
           child: Column(
             children: [
               ScaleTransition(
-                scale: Tween<double>(begin: 0.8, end: 1.0).animate(_scaleAnimation),
+                scale: Tween<double>(begin: 0.8, end: 1.0)
+                    .animate(_scaleAnimation),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: Padding(
@@ -114,7 +114,10 @@ class _UserLoginSelectionState extends State<UserLoginSelection>
                         const SizedBox(height: 20),
                         Text(
                           "Welcome Back!",
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             shadows: [
@@ -192,8 +195,8 @@ class _UserLoginSelectionState extends State<UserLoginSelection>
     );
   }
 
-  Widget _buildLoginCard(
-      int index, String title, String description, IconData icon, VoidCallback onPressed) {
+  Widget _buildLoginCard(int index, String title, String description,
+      IconData icon, VoidCallback onPressed) {
     return MouseRegion(
       onEnter: (_) => setState(() => _hoveredIndex = index),
       onExit: (_) => setState(() => _hoveredIndex = null),
@@ -209,7 +212,8 @@ class _UserLoginSelectionState extends State<UserLoginSelection>
             return Transform.scale(
               scale: 1 + (0.02 * value),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(24),
@@ -243,10 +247,13 @@ class _UserLoginSelectionState extends State<UserLoginSelection>
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
                           ),
                           const SizedBox(height: 6),
                           Text(

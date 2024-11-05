@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/farmer/dashboard.dart';
 import 'package:e_agritech_app/screens/welcome_screen.dart';
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/student/home_page_student.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +9,19 @@ import 'package:provider/provider.dart';
 
 class AuthChecker extends StatelessWidget {
   const AuthChecker({super.key});
+
+  Future<String?> _getUserType(String uid) async {
+    try {
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        return userDoc.get('userType') as String?;
+      }
+    } catch (e) {
+      debugPrint("Error fetching userType: $e");
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,20 +35,12 @@ class AuthChecker extends StatelessWidget {
               if (user == null) {
                 return WelcomeScreen();
               } else {
-                // comments by asadalpha
-                // Fetch userType from Firestore
-                /// using [ FutureBuilder ] for getting one snapshot ------
-                // then seeing into users collection for userType
-
-                return FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .get(),
+                return FutureBuilder<String?>(
+                  future: _getUserType(user.uid),
                   builder: (context, userSnapshot) {
                     if (userSnapshot.connectionState == ConnectionState.done) {
-                      if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                        var userType = userSnapshot.data!.get('userType');
+                      if (userSnapshot.hasData) {
+                        final userType = userSnapshot.data;
                         if (userType == "Farmer") {
                           return HomePageFarmer();
                         } else if (userType == "Student") {
@@ -43,6 +48,8 @@ class AuthChecker extends StatelessWidget {
                         } else {
                           return WelcomeScreen();
                         }
+                      } else if (userSnapshot.hasError) {
+                        return Center(child: Text("Error loading profile"));
                       } else {
                         return WelcomeScreen();
                       }
@@ -53,8 +60,7 @@ class AuthChecker extends StatelessWidget {
                 );
               }
             } else {
-              return Center(
-                  child: CircularProgressIndicator()); // Loading auth state
+              return Center(child: CircularProgressIndicator());
             }
           },
         );
