@@ -5,8 +5,7 @@ import 'package:intl/intl.dart';
 class ProblemDetailScreen extends StatelessWidget {
   final ProblemModel problem;
 
-  const ProblemDetailScreen({Key? key, required this.problem})
-      : super(key: key);
+  const ProblemDetailScreen({super.key, required this.problem});
 
   @override
   Widget build(BuildContext context) {

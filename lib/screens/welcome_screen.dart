@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import 'user_registration_selection.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({Key? key}) : super(key: key);
+  const WelcomeScreen({super.key});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -17,7 +17,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  bool _isSliding = false;
+  final bool _isSliding = false;
   final _random = math.Random();
 
   // Add animated background bubbles
@@ -144,7 +144,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 colors: [
                   Theme.of(context).primaryColor,
                   Theme.of(context).primaryColor.withGreen(
-                        (Theme.of(context).primaryColor.green + 40).clamp(0, 255),
+                        (Theme.of(context).primaryColor.green + 40)
+                            .clamp(0, 255),
                       ),
                 ],
               ),
@@ -197,7 +198,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     ],
                                   ),
                                   child: Image.asset(
-                                    'assets/logo.png',
+                                    'assets/seedling.png',
                                     height: 120,
                                     width: 120,
                                   ),

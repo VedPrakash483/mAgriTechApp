@@ -9,7 +9,7 @@ import 'package:e_agritech_app/components/custom_dropdown.dart';
 import 'package:e_agritech_app/components/custom_test_field.dart';
 
 class StudentRegister extends StatefulWidget {
-  const StudentRegister({Key? key}) : super(key: key);
+  const StudentRegister({super.key});
 
   @override
   _StudentRegisterState createState() => _StudentRegisterState();

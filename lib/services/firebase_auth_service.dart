@@ -33,7 +33,8 @@ class FirebaseAuthService extends ChangeNotifier {
     String? specialization,
   }) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -79,28 +80,18 @@ class FirebaseAuthService extends ChangeNotifier {
   }
 
   // Login user with detailed error messages
-  Future<String?> loginUser(String email, String password) async {
+  Future<User?> loginUser(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      notifyListeners(); // Notify listeners after successful login
-      return null; // Return null to indicate success
+      notifyListeners();
+      return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case 'user-not-found':
-          return 'No user found with this email.';
-        case 'wrong-password':
-          return 'Incorrect password.';
-        case 'invalid-email':
-          return 'Invalid email format.';
-        default:
-          return 'Login failed. Please try again.';
-      }
+      throw Exception(e.message);
     } catch (e) {
-      print("General Login Error: $e");
-      return 'An unexpected error occurred. Please try again.';
+      throw Exception('An unknown error occurred.');
     }
   }
 

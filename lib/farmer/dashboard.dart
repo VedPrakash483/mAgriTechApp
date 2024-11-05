@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
 import 'package:e_agritech_app/farmer/add_problem_page.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+class HomePageFarmer extends StatefulWidget {
+  const HomePageFarmer({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _HomePageFarmerState createState() => _HomePageFarmerState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _HomePageFarmerState extends State<HomePageFarmer> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String farmerId =
       "current_farmer_id"; // Replace with actual farmer ID logic
@@ -135,7 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           margin: const EdgeInsets.only(bottom: 16),
           child: ListTile(
             leading: Hero(
-              tag: 'problem_${problem}',
+              tag: 'problem_$problem',
               child: Icon(
                 problem.status == 'completed'
                     ? Icons.check_circle

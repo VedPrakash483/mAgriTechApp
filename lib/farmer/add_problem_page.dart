@@ -13,7 +13,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 class AddProblemScreen extends StatefulWidget {
   final String farmerId;
 
-  const AddProblemScreen({Key? key, required this.farmerId}) : super(key: key);
+  const AddProblemScreen({super.key, required this.farmerId});
 
   @override
   _AddProblemScreenState createState() => _AddProblemScreenState();
@@ -30,7 +30,7 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   String _description = '';
   String _categoryTag = '';
   File? _imageFile;
-  bool _isRecording = false;
+  final bool _isRecording = false;
   String? _audioPath;
 
   Future<void> _pickImage() async {
@@ -45,7 +45,7 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   }
 
   late AnimationController _animationController;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {

@@ -5,7 +5,7 @@ import 'registraion_login/students_register.dart';
 import 'user_login_selection.dart';
 
 class UserSelectionScreen extends StatefulWidget {
-  const UserSelectionScreen({Key? key}) : super(key: key);
+  const UserSelectionScreen({super.key});
 
   @override
   State<UserSelectionScreen> createState() => _UserSelectionScreenState();

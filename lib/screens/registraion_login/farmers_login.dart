@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/farmer/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,7 @@ import 'package:e_agritech_app/services/firebase_auth_service.dart'; // Import y
 import 'package:e_agritech_app/providers/auth_provider.dart'; // Ensure this points to your Provider class
 
 class FarmersLogin extends StatefulWidget {
-  const FarmersLogin({Key? key}) : super(key: key);
+  const FarmersLogin({super.key});
 
   @override
   State<FarmersLogin> createState() => _FarmersLoginState();
@@ -40,7 +41,8 @@ class _FarmersLoginState extends State<FarmersLogin>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+    _fadeAnimation =
+        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _animationController,
       curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
     ));
@@ -68,13 +70,15 @@ class _FarmersLoginState extends State<FarmersLogin>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const UserSelectionScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const UserSelectionScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
           return SlideTransition(
             position: animation.drive(tween),
@@ -86,40 +90,41 @@ class _FarmersLoginState extends State<FarmersLogin>
     );
   }
 
+  final FirebaseAuthService _authService = FirebaseAuthService();
+
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final authProvider = Provider.of<FirebaseAuthService>(context, listen: false);
 
-    try {
-      final user = await authProvider.loginUser(
-        _emailController.text.trim(),
-        _passwordController.text,
+  try {
+    final user = await _authService.loginUser(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (user != null) {
+      // Navigate to HomePageFarmer on successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePageFarmer()),
       );
-
-      if (user != null) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-
-        if (userDoc.data()?['userType'] == 'Farmer') {
-          _navigateToHome();
-        } else {
-          _showError('This account is not registered as a farmer.');
-        }
-      } else {
-        _showError('Login failed. Please check your credentials.');
-      }
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print("Login successful");
+    } else {
+      _showError('Login failed. Please check your credentials.');
     }
+  } catch (e) {
+    _showError(e.toString());
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -132,7 +137,8 @@ class _FarmersLoginState extends State<FarmersLogin>
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Farmer Login', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Farmer Login',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
         backgroundColor: Colors.transparent,
         centerTitle: true,
@@ -155,23 +161,28 @@ class _FarmersLoginState extends State<FarmersLogin>
                       builder: (context, double value, child) {
                         return Transform.scale(
                           scale: value,
-                          child: Icon(Icons.agriculture, size: 80, color: Theme.of(context).primaryColor),
+                          child: Icon(Icons.agriculture,
+                              size: 80, color: Theme.of(context).primaryColor),
                         );
                       },
                     ),
                     const SizedBox(height: 24),
                     Text(
                       'Welcome Back!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Login to access your farming dashboard',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.grey[600]),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
@@ -184,7 +195,8 @@ class _FarmersLoginState extends State<FarmersLogin>
                         if (value?.isEmpty ?? true) {
                           return 'Please enter your email';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value!)) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -211,7 +223,8 @@ class _FarmersLoginState extends State<FarmersLogin>
                         },
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(color: Theme.of(context).primaryColor),
+                          style:
+                              TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ),
@@ -230,11 +243,17 @@ class _FarmersLoginState extends State<FarmersLogin>
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FarmersRegister()));
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const FarmersRegister()));
                           },
                           child: Text(
                             'Register',
-                            style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -247,7 +266,8 @@ class _FarmersLoginState extends State<FarmersLogin>
                         },
                         icon: const Icon(Icons.language),
                         label: const Text('Change Language'),
-                        style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey[600]),
                       ),
                     ),
                   ],
