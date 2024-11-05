@@ -1,5 +1,7 @@
+import 'package:e_agritech_app/farmer/problem_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
 import 'package:e_agritech_app/farmer/add_problem_page.dart';
 
@@ -12,53 +14,85 @@ class HomePageFarmer extends StatefulWidget {
 
 class _HomePageFarmerState extends State<HomePageFarmer> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String farmerId =
-      "current_farmer_id"; // Replace with actual farmer ID logic
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  late String farmerId;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeFarmerId();
+  }
+
+  Future<void> _initializeFarmerId() async {
+    // Get the authenticated user's UID
+    final User? currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      setState(() {
+        farmerId = currentUser.uid;
+      });
+    } else {
+      // Handle the case where there is no authenticated user
+      farmerId = '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Farmer Dashboard'),
-        elevation: 0,
-        backgroundColor: Colors.teal[700],
+        title: const Text('Farmer Dashboard', style: TextStyle(fontSize: 22)),
+        elevation: 2,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF66BB6A),
+                Color(0xFF43A047)
+              ], // accentGreen gradient
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('problems')
-            .where('farmerId', isEqualTo: farmerId)
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          // Handle loading state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: farmerId.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('problems')
+                  .where('farmerId', isEqualTo: farmerId)
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          // Handle error state
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-          // Handle null or empty data
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No problems found'));
-          }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child: Text('No problems found',
+                          style: TextStyle(fontSize: 16, color: Colors.grey)));
+                }
 
-          List<ProblemModel> problems = snapshot.data!.docs
-              .map((doc) =>
-                  ProblemModel.fromMap(doc.data() as Map<String, dynamic>))
-              .toList();
+                List<ProblemModel> problems = snapshot.data!.docs
+                    .map((doc) => ProblemModel.fromMap(
+                        doc.data() as Map<String, dynamic>))
+                    .toList();
 
-          return Column(
-            children: [
-              _buildSummaryCards(problems),
-              Expanded(child: _buildProblemsList(problems)),
-            ],
-          );
-        },
-      ),
+                return Column(
+                  children: [
+                    _buildSummaryCards(problems),
+                    Expanded(child: _buildProblemsList(problems)),
+                  ],
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -67,7 +101,7 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
                 builder: (context) => AddProblemScreen(farmerId: farmerId)),
           );
         },
-        backgroundColor: Colors.teal[600],
+        backgroundColor: const Color(0xFF388E3C),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -81,9 +115,11 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          _buildAnimatedSummaryCard('Completed', completed, Colors.green[400]!),
+          _buildAnimatedSummaryCard(
+              'Completed', completed, const Color(0xFF66BB6A)),
           const SizedBox(width: 16),
-          _buildAnimatedSummaryCard('Ongoing', ongoing, Colors.orange[400]!),
+          _buildAnimatedSummaryCard(
+              'Ongoing', ongoing, const Color(0xFFFFA726)),
         ],
       ),
     );
@@ -92,24 +128,37 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
   Widget _buildAnimatedSummaryCard(String title, int count, Color color) {
     return Expanded(
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(10),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.3), color.withOpacity(0.6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 count.toString(),
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
               ),
+              const SizedBox(height: 6),
               Text(
                 title,
                 style: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -121,6 +170,7 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
     );
   }
 
+  // Inside your HomePageFarmer class
   Widget _buildProblemsList(List<ProblemModel> problems) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -129,13 +179,12 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
         final problem = problems[index];
         return Card(
           elevation: 4,
-          shadowColor: Colors.teal[100],
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.only(bottom: 16),
           child: ListTile(
             leading: Hero(
-              tag: 'problem_$problem',
+              tag: 'problem_${problem}',
               child: Icon(
                 problem.status == 'completed'
                     ? Icons.check_circle
@@ -145,31 +194,45 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
                     : Colors.orange,
               ),
             ),
-            title: Text(problem.assistanceType,
-                style: TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              problem.assistanceType,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(problem.description,
-                    style: TextStyle(color: Colors.grey[700])),
+                Text(
+                  problem.description,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    Text(
-                      problem.location,
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                    const SizedBox(width: 4),
+                    // Uncomment if you want to show location
+                    // Text(
+                    //   problem.location,
+                    //   style: TextStyle(color: Colors.grey[600]),
+                    // ),
                   ],
                 ),
               ],
             ),
             trailing: Chip(
-              label: Text(problem.categoryTag),
-              backgroundColor: Colors.teal[50],
+              label: Text(
+                problem.categoryTag,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF2E7D32)),
+              ),
+              backgroundColor: const Color(0xFFE8F5E9),
             ),
             onTap: () {
-              // Implement navigation with Hero animation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProblemDetailScreen(problem: problem),
+                ),
+              );
             },
           ),
         );

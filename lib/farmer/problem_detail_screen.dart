@@ -16,7 +16,7 @@ class ProblemDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // Implement edit functionality
+              // Uncomment to navigate to edit screen
               // Navigator.push(
               //   context,
               //   MaterialPageRoute(builder: (context) => EditProblemScreen(problem: problem)),
@@ -133,8 +133,8 @@ class ProblemDetailScreen extends StatelessWidget {
         const SizedBox(height: 8),
         InkWell(
           onTap: () async {
-            final url =
-                'https://www.google.com/maps/search/?api=1&query=${problem.location}';
+            // final url =
+            //     'https://www.google.com/maps/search/?api=1&query=${problem.location}';
             // if (await canLaunch(url)) {
             //   await launch(url);
             // }
@@ -145,7 +145,8 @@ class ProblemDetailScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  problem.location,
+                  // problem.location,
+                  "location",
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.blue[700],

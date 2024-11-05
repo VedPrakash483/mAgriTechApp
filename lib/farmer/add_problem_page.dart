@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
@@ -24,7 +23,6 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   final _formKey = GlobalKey<FormState>();
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
-  // final _record = Record;
 
   String _assistanceType = '';
   String _description = '';
@@ -32,20 +30,9 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   File? _imageFile;
   final bool _isRecording = false;
   String? _audioPath;
-
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        _imageFile = File(image.path);
-      });
-    }
-  }
+  bool _isLoading = false;
 
   late AnimationController _animationController;
-  final bool _isLoading = false;
 
   @override
   void initState() {
@@ -62,65 +49,83 @@ class _AddProblemScreenState extends State<AddProblemScreen>
     super.dispose();
   }
 
-  // Modified submit function with loading state
+  // Future<void> _pickImage() async {
+  //   final ImagePicker picker = ImagePicker();
+  //   final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  Future<void> _toggleRecording() async {
-    // if (!_isRecording) {
-    //   if (await _record.hasPermission()) {
-    //     await _record.start();
-    //     setState(() => _isRecording = true);
-    //   }
-    // } else {
-    //   _audioPath = await _record.stop();
-    //   setState(() => _isRecording = false);
-    // }
-  }
+  //   if (image != null) {
+  //     setState(() {
+  //       _imageFile = File(image.path);
+  //     });
+  //   }
+  // }
 
-  Future<String?> _uploadFile(File file, String path) async {
-    try {
-      final ref = _storage.ref().child(path);
-      await ref.putFile(file);
-      return await ref.getDownloadURL();
-    } catch (e) {
-      print('Error uploading file: $e');
-      return null;
-    }
-  }
+  // Future<String?> _uploadFile(File file, String path) async {
+  //   try {
+  //     final ref = _storage.ref().child(path);
+  //     await ref.putFile(file);
+  //     return await ref.getDownloadURL();
+  //   } catch (e) {
+  //     print('Error uploading file: $e');
+  //     return null;
+  //   }
+  // }
 
   Future<void> _submitProblem() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
       _formKey.currentState!.save();
 
-      String? imageUrl;
-      String? audioUrl;
+      try {
+        // Upload image if it exists
+        // String? imageUrl;
+        // if (_imageFile != null) {
+        //   imageUrl = await _uploadFile(
+        //     _imageFile!,
+        //     'problems/images/${DateTime.now().millisecondsSinceEpoch}.jpg',
+        //   );
+        // }
 
-      if (_imageFile != null) {
-        imageUrl = await _uploadFile(
-            _imageFile!, 'problems/images/${DateTime.now()}.jpg');
+        // Upload audio if it exists
+        // String? audioUrl;
+        // if (_audioPath != null) {
+        //   audioUrl = await _uploadFile(
+        //     File(_audioPath!),
+        //     'problems/audio/${DateTime.now().millisecondsSinceEpoch}.m4a',
+        //   );
+        // }
+
+        // Fetch current location
+        //final position = await Geolocator.getCurrentPosition();
+        //final location = '${position.latitude}, ${position.longitude}';
+
+        // Prepare ProblemModel object
+        final problem = ProblemModel(
+          farmerId: widget.farmerId,
+          assistanceType: _assistanceType,
+          description: _description,
+          //audioUrl: audioUrl,
+          //imageUrl: imageUrl,
+          categoryTag: _categoryTag,
+          //location: location,
+          status: 'ongoing',
+          timestamp: Timestamp.now(),
+        );
+
+        // Save to Firestore
+        await _firestore.collection('problems').add(problem.toMap());
+
+        // On successful submission, navigate back
+        Navigator.pop(context);
+      } catch (e) {
+        print('Error submitting problem: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to submit problem. Please try again.')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
       }
-
-      if (_audioPath != null) {
-        audioUrl = await _uploadFile(
-            File(_audioPath!), 'problems/audio/${DateTime.now()}.m4a');
-      }
-
-      final position = await Geolocator.getCurrentPosition();
-      final location = '${position.latitude}, ${position.longitude}';
-
-      final problem = ProblemModel(
-        farmerId: widget.farmerId,
-        assistanceType: _assistanceType,
-        description: _description,
-        audioUrl: audioUrl,
-        imageUrl: imageUrl,
-        categoryTag: _categoryTag,
-        location: location,
-        status: 'ongoing',
-        timestamp: Timestamp.now(),
-      );
-
-      await _firestore.collection('problems').add(problem.toMap());
-      Navigator.pop(context);
     }
   }
 
@@ -314,34 +319,19 @@ class _AddProblemScreenState extends State<AddProblemScreen>
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Stack(
-          children: [
-            TextFormField(
-              maxLines: 4,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Describe your problem...',
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a description';
-                }
-                return null;
-              },
-              onSaved: (value) => _description = value!,
-            ),
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: IconButton(
-                icon: Icon(
-                  _isRecording ? Icons.stop : Icons.mic,
-                  color: _isRecording ? Colors.red : Colors.grey,
-                ),
-                onPressed: _toggleRecording,
-              ),
-            ),
-          ],
+        TextFormField(
+          maxLines: 4,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Describe your problem...',
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter a description';
+            }
+            return null;
+          },
+          onSaved: (value) => _description = value!,
         ),
       ],
     );
@@ -349,28 +339,19 @@ class _AddProblemScreenState extends State<AddProblemScreen>
 
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        labelText: 'Category',
-        border: OutlineInputBorder(),
-      ),
-      items: [
-        'Plant Disease',
-        'Soil Issue',
-        'Animal Health',
-        'Equipment',
-      ].map((String value) {
+      items: <String>['Category 1', 'Category 2', 'Category 3']
+          .map((String category) {
         return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value),
+          value: category,
+          child: Text(category),
         );
       }).toList(),
       onChanged: (value) => setState(() => _categoryTag = value!),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select a category';
-        }
-        return null;
-      },
+      decoration: const InputDecoration(
+        labelText: 'Select a Category',
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) => value == null ? 'Please select a category' : null,
     );
   }
 
@@ -379,32 +360,26 @@ class _AddProblemScreenState extends State<AddProblemScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Add Photo',
+          'Upload Media',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        InkWell(
-          onTap: _pickImage,
-          child: Container(
-            height: 150,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
+        Row(
+          children: [
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.image),
+              label: const Text('Upload Image'),
             ),
-            child: _imageFile != null
-                ? Image.file(_imageFile!, fit: BoxFit.cover)
-                : const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.cloud_upload, size: 48, color: Colors.grey),
-                      SizedBox(height: 8),
-                      Text(
-                        'Tap to upload image',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-          ),
+            const SizedBox(width: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Record audio function
+              },
+              icon: const Icon(Icons.mic),
+              label: const Text('Record Audio'),
+            ),
+          ],
         ),
       ],
     );

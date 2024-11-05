@@ -7,7 +7,7 @@ class ProblemModel {
   final String? audioUrl; 
   final String? imageUrl;
   final String categoryTag;
-  final String location;
+  final String? location;
   final String status;
   final Timestamp timestamp;
 
@@ -18,7 +18,7 @@ class ProblemModel {
     this.audioUrl,
     this.imageUrl,
     required this.categoryTag,
-    required this.location,
+     this.location,
     required this.status,
     required this.timestamp,
   });
