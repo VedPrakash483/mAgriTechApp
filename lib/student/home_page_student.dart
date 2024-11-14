@@ -1,6 +1,7 @@
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
 import 'package:e_agritech_app/services/user_service.dart';
 import 'package:e_agritech_app/student/problem_details_screen.dart';
+import 'package:e_agritech_app/student/sidebar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '/models/user_model.dart';
@@ -127,118 +128,6 @@ class _HomePageStudentState extends State<HomePageStudent> {
                     ),
                   ],
                 ),
-    );
-  }
-}
-
-class Sidebar extends StatelessWidget {
-  final UserModel userModel;
-
-  const Sidebar({super.key, required this.userModel});
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(
-              color: Colors.blueAccent,
-              image: DecorationImage(
-                image: NetworkImage('https://placeholder.com/background'),
-                fit: BoxFit.cover,
-                opacity: 0.2,
-              ),
-            ),
-            accountName: Text(
-              userModel.name, // Use the name from userModel
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            accountEmail: Text(
-              "Specialization: ${userModel.specialization ?? 'Not Provided'}", // Use specialization from userModel
-            ),
-            currentAccountPicture: Hero(
-              tag: 'profile',
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    userModel.name.isNotEmpty
-                        ? userModel.name[0]
-                            .toUpperCase() // Display first letter of name
-                        : '',
-                    style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: _buildAnimatedListTiles(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildAnimatedListTiles() {
-    final items = [
-      {'title': 'Settings', 'icon': Icons.settings},
-      {'title': 'Achievements', 'icon': Icons.emoji_events},
-      {'title': 'Feedback', 'icon': Icons.feedback},
-    ];
-
-    return items
-        .map((item) => _AnimatedListTile(
-              title: item['title'] as String,
-              icon: item['icon'] as IconData,
-            ))
-        .toList();
-  }
-}
-
-class _AnimatedListTile extends StatefulWidget {
-  final String title;
-  final IconData icon;
-
-  const _AnimatedListTile({
-    required this.title,
-    required this.icon,
-  });
-
-  @override
-  _AnimatedListTileState createState() => _AnimatedListTileState();
-}
-
-class _AnimatedListTileState extends State<_AnimatedListTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      color: _isHovered ? Colors.blue.withOpacity(0.1) : Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // Implement navigation based on the tile tapped
-        },
-        onHover: (isHovered) => setState(() => _isHovered = isHovered),
-        child: ListTile(
-          leading: Icon(widget.icon,
-              color: _isHovered ? Colors.blueAccent : Colors.grey),
-          title: Text(widget.title),
-        ),
-      ),
     );
   }
 }
