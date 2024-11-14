@@ -1,5 +1,9 @@
 import 'package:e_agritech_app/services/firebase_auth_service.dart';
+import 'package:e_agritech_app/services/user_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '/models/user_model.dart';
+import '/models/problem_model.dart';
 
 class HomePageStudent extends StatefulWidget {
   const HomePageStudent({super.key});
@@ -10,12 +14,82 @@ class HomePageStudent extends StatefulWidget {
 
 class _HomePageStudentState extends State<HomePageStudent> {
   final FirebaseAuthService _authService = FirebaseAuthService();
+  final UserService _userService = UserService();
+
+  UserModel? currentUser;
+  List<ProblemModel> problems = [];
+  bool isLoading = true;
+  String? errorMessage;
+  @override
+  void initState() {
+    super.initState();
+    fetchUserAndProblems();
+  }
+
+  Future<void> fetchUserAndProblems() async {
+    try {
+      // Get current Firebase user
+      final firebaseUser = _authService.currentUser;
+      if (firebaseUser == null) {
+        setState(() {
+          errorMessage = "No user is currently logged in.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch user model from Firestore
+      final userModel = await _userService.getUserById(firebaseUser.uid);
+      if (userModel == null) {
+        setState(() {
+          errorMessage = "User data not found.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        currentUser = userModel;
+      });
+
+      // Fetch all problems from Firestore
+      List<ProblemModel> allProblems = await _userService.getProblems();
+
+      // Filter problems based on student's state
+      // Filter problems based on student's state and preferred assistance type
+      List<ProblemModel> filteredProblems = allProblems.where((problem) {
+        // Check if location and state are not null
+        if (problem.location == null || userModel.state == null) return false;
+
+        // Match state (case-insensitive)
+        bool stateMatch =
+            problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+        // Optional: Add a preferred assistance type filter if you have it in the user model
+        // If not, you can remove this condition or modify as needed
+        bool assistanceTypeMatch = problem.assistanceType ==
+            userModel.specialization; //userModel.specialization == null ||
+
+        return stateMatch && assistanceTypeMatch;
+      }).toList();
+
+      setState(() {
+        problems = filteredProblems;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching data: $e";
+        isLoading = false;
+      });
+    }
+  }
 
   void signOut() async {
     try {
       await _authService.signOutUser();
     } catch (e) {
-      debugPrint("Errot :$e");
+      debugPrint("Error signing out: $e");
     }
   }
 
@@ -36,21 +110,30 @@ class _HomePageStudentState extends State<HomePageStudent> {
           ),
         ],
       ),
-      drawer: const Sidebar(),
-      body: Column(
-        children: [
-          const FilteredProblemFeed(),
-          Expanded(
-            child: ProblemList(),
-          ),
-        ],
-      ),
+      drawer: currentUser != null ? Sidebar(userModel: currentUser!) : null,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+              ? Center(child: Text(errorMessage!))
+              : Column(
+                  children: [
+                    const FilteredProblemFeed(),
+                    Expanded(
+                      child: problems.isEmpty
+                          ? const Center(
+                              child: Text("No problems found for your state"))
+                          : ProblemList(problems: problems),
+                    ),
+                  ],
+                ),
     );
   }
 }
 
 class Sidebar extends StatelessWidget {
-  const Sidebar({super.key});
+  final UserModel userModel;
+
+  const Sidebar({super.key, required this.userModel});
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +149,13 @@ class Sidebar extends StatelessWidget {
                 opacity: 0.2,
               ),
             ),
-            accountName: const Text("Asad",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            accountEmail: const Text("Specialization: Developer"),
+            accountName: Text(
+              userModel.name, // Use the name from userModel
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            accountEmail: Text(
+              "Specialization: ${userModel.specialization ?? 'Not Provided'}", // Use specialization from userModel
+            ),
             currentAccountPicture: Hero(
               tag: 'profile',
               child: Container(
@@ -76,13 +163,18 @@ class Sidebar extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Text("A",
-                      style: TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold)),
+                  child: Text(
+                    userModel.name.isNotEmpty
+                        ? userModel.name[0]
+                            .toUpperCase() // Display first letter of name
+                        : '',
+                    style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -136,7 +228,9 @@ class _AnimatedListTileState extends State<_AnimatedListTile> {
       duration: const Duration(milliseconds: 200),
       color: _isHovered ? Colors.blue.withOpacity(0.1) : Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          // Implement navigation based on the tile tapped
+        },
         onHover: (isHovered) => setState(() => _isHovered = isHovered),
         child: ListTile(
           leading: Icon(widget.icon,
@@ -196,6 +290,7 @@ class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
             initialValue: _selectedFilter,
             onSelected: (String value) {
               setState(() => _selectedFilter = value);
+              // Implement filter functionality based on _selectedFilter
             },
             child: Chip(
               avatar: const Icon(Icons.filter_list, size: 20),
@@ -218,28 +313,9 @@ class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
 }
 
 class ProblemList extends StatelessWidget {
-  final List<Map<String, String>> problems = [
-    {
-      "title": "Medical Assistance Needed",
-      "type": "Medical",
-      "urgency": "High",
-      "location": "2.5 km away"
-    },
-    {
-      "title": "Emergency Support Required",
-      "type": "Emergency",
-      "urgency": "Critical",
-      "location": "1.2 km away"
-    },
-    {
-      "title": "General Assistance",
-      "type": "General",
-      "urgency": "Medium",
-      "location": "3.8 km away"
-    },
-  ];
+  final List<ProblemModel> problems;
 
-  ProblemList({super.key});
+  const ProblemList({super.key, required this.problems});
 
   @override
   Widget build(BuildContext context) {
@@ -247,8 +323,9 @@ class ProblemList extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       itemCount: problems.length,
       itemBuilder: (context, index) {
+        final problem = problems[index];
         return ProblemCard(
-          problemData: problems[index],
+          problemData: problem,
           index: index,
         );
       },
@@ -257,7 +334,7 @@ class ProblemList extends StatelessWidget {
 }
 
 class ProblemCard extends StatefulWidget {
-  final Map<String, String> problemData;
+  final ProblemModel problemData;
   final int index;
 
   const ProblemCard({
@@ -309,8 +386,6 @@ class _ProblemCardState extends State<ProblemCard>
           side: const BorderSide(color: Colors.grey, width: 0.5),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-
-        ///  elevation: 10,
         child: InkWell(
           onTap: () {
             Navigator.push(
@@ -331,7 +406,7 @@ class _ProblemCardState extends State<ProblemCard>
                   children: [
                     Expanded(
                       child: Text(
-                        widget.problemData['title']!,
+                        widget.problemData.categoryTag,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -342,22 +417,22 @@ class _ProblemCardState extends State<ProblemCard>
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 6, // Space between chips
+                  runSpacing: 4, // Space between rows of chips
                   children: [
                     _buildChip(
-                      widget.problemData['type']!,
+                      widget.problemData.assistanceType,
                       Icons.medical_services,
                       Colors.blue,
                     ),
-                    const SizedBox(width: 6),
                     _buildChip(
-                      widget.problemData['urgency']!,
+                      widget.problemData.status,
                       Icons.warning,
                       Colors.orange,
                     ),
-                    const SizedBox(width: 6),
                     _buildChip(
-                      widget.problemData['location']!,
+                      widget.problemData.location ?? 'Unknown',
                       Icons.location_on,
                       Colors.green,
                     ),
@@ -400,13 +475,12 @@ class _ProblemCardState extends State<ProblemCard>
         style: TextStyle(fontSize: 12, color: color),
       ),
       backgroundColor: color.withOpacity(0.1),
-      //padding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }
 
 class ProblemDetailsScreen extends StatefulWidget {
-  final Map<String, String> problemData;
+  final ProblemModel problemData;
 
   const ProblemDetailsScreen({super.key, required this.problemData});
 
@@ -443,7 +517,7 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.problemData['title']!),
+        title: Text(widget.problemData.categoryTag),
         backgroundColor: Colors.blueAccent,
         elevation: 0,
       ),
@@ -460,7 +534,7 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               const SizedBox(height: 24),
               _buildSolutionSection(),
               const SizedBox(height: 24),
-              _buildActionButton(),
+              _buildRequestVisitButton(),
             ],
           ),
         ),
@@ -475,14 +549,13 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(
-                Icons.medical_services, 'Type', widget.problemData['type']!),
+            _buildInfoRow(Icons.medical_services, 'Type',
+                widget.problemData.assistanceType),
             const SizedBox(height: 12),
-            _buildInfoRow(
-                Icons.warning, 'Urgency', widget.problemData['urgency']!),
+            _buildInfoRow(Icons.warning, 'Status', widget.problemData.status),
             const SizedBox(height: 12),
-            _buildInfoRow(
-                Icons.location_on, 'Location', widget.problemData['location']!),
+            _buildInfoRow(Icons.location_on, 'Location',
+                widget.problemData.location ?? 'Unknown'),
           ],
         ),
       ),
@@ -504,20 +577,18 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
   }
 
   Widget _buildDescriptionSection() {
-    return const Card(
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Description',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Detailed description of the problem goes here. This section provides comprehensive information about the situation and requirements.',
-            ),
+            const SizedBox(height: 8),
+            Text(widget.problemData.description),
           ],
         ),
       ),
@@ -554,7 +625,9 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
     return Column(
       children: [
         InkWell(
-          onTap: () {},
+          onTap: () {
+            // Implement solution addition functionality here
+          },
           borderRadius: BorderRadius.circular(30),
           child: Container(
             padding: const EdgeInsets.all(16),
