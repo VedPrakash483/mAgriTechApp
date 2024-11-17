@@ -17,7 +17,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  bool _isSliding = false;
+  final bool _isSliding = false;
   final _random = math.Random();
 
   // Add animated background bubbles

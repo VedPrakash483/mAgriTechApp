@@ -28,10 +28,9 @@ class _StudentRegisterState extends State<StudentRegister> {
   String? _selectedSpecialization;
 
   final _states = [
-    'Andhra Pradesh',
-    'Maharashtra',
-    'Karnataka',
-    'Tamil Nadu',
+    'Andhra Pradesh', 'Maharashtra', 'Karnataka', 'Tamil Nadu',
+    'Gujarat', 'Kerala', 'Madhya Pradesh', 'Punjab',
+    'Rajasthan', 'Uttar Pradesh',
   ];
 
   final _specializations = [

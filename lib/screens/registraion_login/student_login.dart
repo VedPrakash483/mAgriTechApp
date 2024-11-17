@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/student/home_page_student.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -109,6 +110,10 @@ class _StudentsLoginState extends State<StudentsLogin>
 
       if (user != null) {
         print("login successful");
+        Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePageStudent()),
+      );
       } else {
         _showError('Login failed. Please check your credentials.');
       }

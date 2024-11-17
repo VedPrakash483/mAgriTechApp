@@ -2,17 +2,17 @@ import 'dart:io';
 import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
+import 'package:e_agritech_app/models/user_model.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class AddProblemScreen extends StatefulWidget {
   final String farmerId;
+  final UserModel userModel;
 
-  const AddProblemScreen({super.key, required this.farmerId});
+  const AddProblemScreen({super.key, required this.farmerId, required this.userModel});
 
   @override
   _AddProblemScreenState createState() => _AddProblemScreenState();
@@ -28,7 +28,7 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   String _description = '';
   String _categoryTag = '';
   File? _imageFile;
-  bool _isRecording = false;
+  final bool _isRecording = false;
   String? _audioPath;
   bool _isLoading = false;
 
@@ -107,7 +107,7 @@ class _AddProblemScreenState extends State<AddProblemScreen>
           //audioUrl: audioUrl,
           //imageUrl: imageUrl,
           categoryTag: _categoryTag,
-          //location: location,
+          location: widget.userModel.state, //error
           status: 'ongoing',
           timestamp: Timestamp.now(),
         );
@@ -213,14 +213,14 @@ class _AddProblemScreenState extends State<AddProblemScreen>
           children: [
             Expanded(
               child: _buildTypeButton(
-                'Medical\nAssistance',
+                'Medicine',
                 Icons.medical_services,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: _buildTypeButton(
-                'Farm\nAssistance',
+                'Agriculture',
                 Icons.agriculture,
               ),
             ),

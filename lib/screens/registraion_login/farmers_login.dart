@@ -1,3 +1,4 @@
+import 'package:e_agritech_app/farmer/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,7 @@ import 'package:e_agritech_app/services/firebase_auth_service.dart'; // Import y
 import 'package:e_agritech_app/providers/auth_provider.dart'; // Ensure this points to your Provider class
 
 class FarmersLogin extends StatefulWidget {
-  const FarmersLogin({Key? key}) : super(key: key);
+  const FarmersLogin({super.key});
 
   @override
   State<FarmersLogin> createState() => _FarmersLoginState();
@@ -92,34 +93,38 @@ class _FarmersLoginState extends State<FarmersLogin>
   final FirebaseAuthService _authService = FirebaseAuthService();
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    final authProvider =
-        Provider.of<FirebaseAuthService>(context, listen: false);
+  final authProvider = Provider.of<FirebaseAuthService>(context, listen: false);
 
-    try {
-      final user = await _authService.loginUser(
-        _emailController.text.trim(),
-        _passwordController.text,
+  try {
+    final user = await _authService.loginUser(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (user != null) {
+      // Navigate to HomePageFarmer on successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePageFarmer()),
       );
-
-      if (user != null) {
-        print("login successful");
-      } else {
-        _showError('Login failed. Please check your credentials.');
-      }
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print("Login successful");
+    } else {
+      _showError('Login failed. Please check your credentials.');
     }
+  } catch (e) {
+    _showError(e.toString());
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

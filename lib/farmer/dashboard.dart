@@ -1,9 +1,10 @@
+import 'package:e_agritech_app/farmer/add_problem_page.dart';
 import 'package:e_agritech_app/farmer/problem_detail_screen.dart';
+import 'package:e_agritech_app/models/problem_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:e_agritech_app/models/problem_model.dart';
-import 'package:e_agritech_app/farmer/add_problem_page.dart';
+import 'package:e_agritech_app/models/user_model.dart'; // Import UserModel
 
 class HomePageFarmer extends StatefulWidget {
   const HomePageFarmer({super.key});
@@ -17,6 +18,7 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   late String farmerId;
+  UserModel? userModel;  // Nullable UserModel instance
 
   @override
   void initState() {
@@ -31,9 +33,26 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
       setState(() {
         farmerId = currentUser.uid;
       });
+      // Fetch the user data after setting the farmerId
+      await _fetchUserModel(farmerId);
     } else {
-      // Handle the case where there is no authenticated user
       farmerId = '';
+    }
+  }
+
+  Future<void> _fetchUserModel(String uid) async {
+    try {
+      // Fetch user data from Firestore
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        // Convert document data to UserModel
+        setState(() {
+          userModel = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+        });
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
     }
   }
 
@@ -57,7 +76,7 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
           ),
         ),
       ),
-      body: farmerId.isEmpty
+      body: farmerId.isEmpty || userModel == null
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<QuerySnapshot>(
               stream: _firestore
@@ -95,11 +114,16 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => AddProblemScreen(farmerId: farmerId)),
-          );
+          if (userModel != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddProblemScreen(
+                        farmerId: farmerId,
+                        userModel: userModel!,  // Pass the initialized userModel here
+                      )),
+            );
+          }
         },
         backgroundColor: const Color(0xFF388E3C),
         child: const Icon(Icons.add, color: Colors.white),
@@ -184,7 +208,7 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
           margin: const EdgeInsets.only(bottom: 16),
           child: ListTile(
             leading: Hero(
-              tag: 'problem_${problem.farmerId}',
+              tag: 'problem_${problem}',
               child: Icon(
                 problem.status == 'completed'
                     ? Icons.check_circle
