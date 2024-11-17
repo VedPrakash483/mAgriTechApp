@@ -1,4 +1,5 @@
 import 'package:e_agritech_app/models/user_model.dart';
+import 'package:e_agritech_app/student/animated_list_tile.dart';
 import 'package:e_agritech_app/student/home_page_student.dart';
 import 'package:flutter/material.dart';
 
@@ -75,7 +76,7 @@ class _SidebarState extends State<Sidebar> {
     ];
 
     return items
-        .map((item) => _AnimatedListTile(
+        .map((item) => AnimatedListTile(
               title: item['title'] as String,
               icon: item['icon'] as IconData,
             ))

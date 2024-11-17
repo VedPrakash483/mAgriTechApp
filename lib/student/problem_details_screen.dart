@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
 import 'package:flutter/material.dart';
 
@@ -80,6 +81,9 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
             const SizedBox(height: 12),
             _buildInfoRow(Icons.location_on, 'Location',
                 widget.problemData.location ?? 'Unknown'),
+            const SizedBox(
+              height: 12,
+            ),
           ],
         ),
       ),
@@ -114,7 +118,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(widget.problemData.description, style: const TextStyle(fontSize: 16)),
+            Text(widget.problemData.description,
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -327,9 +332,114 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     )..repeat();
     _animation = CurvedAnimation(
       parent: _controller,
-      curve : Curves.easeInOut,
+      curve: Curves.easeInOut,
     );
   }
+
+  Widget _buildSolutionSection() {
+    final TextEditingController solutionController = TextEditingController();
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add Solution',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: solutionController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: 'Enter your solution',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                if (solutionController.text.isNotEmpty) {
+                  await _postSolution(solutionController.text);
+                  solutionController.clear();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Solution cannot be empty.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Submit Solution',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Future<void> _postSolution(String solutionText) async {
+//   try {
+//     final problemId = widget.problemData.id; // Assuming `id` is the document ID
+//     final studentId = currentUser?.uid ?? 'Unknown'; // Current student's UID
+//     final studentName = currentUser?.name ?? 'Anonymous'; // Current student's name
+
+//     // Fetch existing solutions
+//     final existingSolutions = widget.problemData.solution.isNotEmpty
+//         ? List<Map<String, dynamic>>.from(widget.problemData.solution)
+//         : [];
+
+//     // Add new solution
+//     existingSolutions.add({
+//       'studentId': studentId,
+//       'studentName': studentName,
+//       'content': solutionText,
+//       'timestamp': DateTime.now().toIso8601String(),
+//     });
+
+//     // Update Firestore
+//     await FirebaseFirestore.instance
+//         .collection('problems')
+//         .doc(problemId)
+//         .update({'solution': existingSolutions});
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(
+//         content: Text('Solution added successfully!'),
+//         backgroundColor: Colors.green,
+//       ),
+//     );
+
+//     // Update local state
+//     setState(() {
+//       widget.problemData.solution = existingSolutions;
+//     });
+//   } catch (e) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text('Error adding solution: $e'),
+//         backgroundColor: Colors.red,
+//       ),
+//     );
+//   }
+// }
 
   @override
   void dispose() {
@@ -361,3 +471,5 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     );
   }
 }
+
+_postSolution(String text) {}

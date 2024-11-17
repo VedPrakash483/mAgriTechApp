@@ -2,7 +2,6 @@ import 'package:e_agritech_app/services/firebase_auth_service.dart';
 import 'package:e_agritech_app/services/user_service.dart';
 import 'package:e_agritech_app/student/problem_details_screen.dart';
 import 'package:e_agritech_app/student/sidebar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '/models/user_model.dart';
 import '/models/problem_model.dart';
@@ -28,64 +27,122 @@ class _HomePageStudentState extends State<HomePageStudent> {
     fetchUserAndProblems();
   }
 
+  // Future<void> fetchUserAndProblems() async {
+  //   try {
+  //     // Get current Firebase user
+  //     final firebaseUser = _authService.currentUser;
+  //     if (firebaseUser == null) {
+  //       setState(() {
+  //         errorMessage = "No user is currently logged in.";
+  //         isLoading = false;
+  //       });
+  //       return;
+  //     }
+
+  //     // Fetch user model from Firestore
+  //     final userModel = await _userService.getUserById(firebaseUser.uid);
+  //     if (userModel == null) {
+  //       setState(() {
+  //         errorMessage = "User data not found.";
+  //         isLoading = false;
+  //       });
+  //       return;
+  //     }
+
+  //     setState(() {
+  //       currentUser = userModel;
+  //     });
+
+  //     // Fetch all problems from Firestore
+  //     List<ProblemModel> allProblems = await _userService.getProblems();
+
+  //     // Filter problems based on student's state
+  //     // Filter problems based on student's state and preferred assistance type
+  //     List<ProblemModel> filteredProblems = allProblems.where((problem) {
+  //       // Check if location and state are not null
+  //       if (problem.location == null || userModel.state == null) return false;
+
+  //       // Match state (case-insensitive)
+  //       bool stateMatch =
+  //           problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+  //       // Optional: Add a preferred assistance type filter if you have it in the user model
+  //       // If not, you can remove this condition or modify as needed
+  //       bool assistanceTypeMatch = problem.assistanceType ==
+  //           userModel.specialization; //userModel.specialization == null ||
+
+  //       return stateMatch && assistanceTypeMatch;
+  //     }).toList();
+
+  //     setState(() {
+  //       problems = filteredProblems;
+  //       isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       errorMessage = "Error fetching data: $e";
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
+
   Future<void> fetchUserAndProblems() async {
-    try {
-      // Get current Firebase user
-      final firebaseUser = _authService.currentUser;
-      if (firebaseUser == null) {
-        setState(() {
-          errorMessage = "No user is currently logged in.";
-          isLoading = false;
-        });
-        return;
-      }
-
-      // Fetch user model from Firestore
-      final userModel = await _userService.getUserById(firebaseUser.uid);
-      if (userModel == null) {
-        setState(() {
-          errorMessage = "User data not found.";
-          isLoading = false;
-        });
-        return;
-      }
-
+  try {
+    // Get current Firebase user
+    final firebaseUser = _authService.currentUser;
+    if (firebaseUser == null) {
       setState(() {
-        currentUser = userModel;
-      });
-
-      // Fetch all problems from Firestore
-      List<ProblemModel> allProblems = await _userService.getProblems();
-
-      // Filter problems based on student's state
-      // Filter problems based on student's state and preferred assistance type
-      List<ProblemModel> filteredProblems = allProblems.where((problem) {
-        // Check if location and state are not null
-        if (problem.location == null || userModel.state == null) return false;
-
-        // Match state (case-insensitive)
-        bool stateMatch =
-            problem.location!.toLowerCase() == userModel.state!.toLowerCase();
-
-        // Optional: Add a preferred assistance type filter if you have it in the user model
-        // If not, you can remove this condition or modify as needed
-        bool assistanceTypeMatch = problem.assistanceType ==
-            userModel.specialization; //userModel.specialization == null ||
-
-        return stateMatch && assistanceTypeMatch;
-      }).toList();
-
-      setState(() {
-        problems = filteredProblems;
+        errorMessage = "No user is currently logged in.";
         isLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        errorMessage = "Error fetching data: $e";
-        isLoading = false;
-      });
+      return;
     }
+
+    // Fetch user model from Firestore
+    final userModel = await _userService.getUserById(firebaseUser.uid);
+    if (userModel == null) {
+      setState(() {
+        errorMessage = "User data not found.";
+        isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      currentUser = userModel;
+    });
+
+    // Fetch all problems from Firestore
+    List<ProblemModel> allProblems = await _userService.getProblems();
+
+    // Filter problems based on student's state and specialization
+    List<ProblemModel> filteredProblems = allProblems.where((problem) {
+      // Ensure non-null values
+      if (problem.location == null || userModel.state == null) return false;
+
+      // Match state (case-insensitive)
+      bool stateMatch =
+          problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+      // Match specialization (case-sensitive for accuracy)
+      bool specializationMatch =
+          problem.assistanceType == userModel.specialization;
+
+      return stateMatch && specializationMatch;
+    }).toList();
+
+    setState(() {
+      problems = filteredProblems;
+      isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      errorMessage = "Error fetching data: $e";
+      isLoading = false;
+    });
   }
+}
+
 
   void signOut() async {
     try {

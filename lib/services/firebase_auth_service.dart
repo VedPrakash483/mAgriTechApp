@@ -33,7 +33,8 @@ class FirebaseAuthService extends ChangeNotifier {
     String? specialization,
   }) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -178,3 +179,5 @@ class FirebaseAuthService extends ChangeNotifier {
     return _auth.currentUser?.emailVerified ?? false;
   }
 }
+
+

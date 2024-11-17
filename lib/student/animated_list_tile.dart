@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class _AnimatedListTile extends StatefulWidget {
+class AnimatedListTile extends StatefulWidget {
   final String title;
   final IconData icon;
 
-  const _AnimatedListTile({
+  const AnimatedListTile({
     required this.title,
     required this.icon,
   });
@@ -13,7 +13,7 @@ class _AnimatedListTile extends StatefulWidget {
   _AnimatedListTileState createState() => _AnimatedListTileState();
 }
 
-class _AnimatedListTileState extends State<_AnimatedListTile> {
+class _AnimatedListTileState extends State<AnimatedListTile> {
   bool _isHovered = false;
 
   @override
