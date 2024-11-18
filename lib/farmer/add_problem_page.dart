@@ -6,13 +6,15 @@ import 'package:e_agritech_app/models/user_model.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class AddProblemScreen extends StatefulWidget {
   final String farmerId;
   final UserModel userModel;
 
-  const AddProblemScreen({super.key, required this.farmerId, required this.userModel});
+  const AddProblemScreen(
+      {super.key, required this.farmerId, required this.userModel});
 
   @override
   _AddProblemScreenState createState() => _AddProblemScreenState();
@@ -28,8 +30,6 @@ class _AddProblemScreenState extends State<AddProblemScreen>
   String _description = '';
   String _categoryTag = '';
   File? _imageFile;
-  final bool _isRecording = false;
-  String? _audioPath;
   bool _isLoading = false;
 
   late AnimationController _animationController;
@@ -49,27 +49,30 @@ class _AddProblemScreenState extends State<AddProblemScreen>
     super.dispose();
   }
 
-  // Future<void> _pickImage() async {
-  //   final ImagePicker picker = ImagePicker();
-  //   final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  //   if (image != null) {
-  //     setState(() {
-  //       _imageFile = File(image.path);
-  //     });
-  //   }
-  // }
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+      });
+    }
+  }
 
-  // Future<String?> _uploadFile(File file, String path) async {
-  //   try {
-  //     final ref = _storage.ref().child(path);
-  //     await ref.putFile(file);
-  //     return await ref.getDownloadURL();
-  //   } catch (e) {
-  //     print('Error uploading file: $e');
-  //     return null;
-  //   }
-  // }
+  // file is uploaded with jpg as a image extension
+  Future<String?> _uploadFile(File file) async {
+    try {
+      final fileName =
+          'prob_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = _storage.ref().child(fileName);
+      await ref.putFile(file);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print('Error uploading file: $e');
+      return null;
+    }
+  }
 
   Future<void> _submitProblem() async {
     if (_formKey.currentState!.validate()) {
@@ -78,36 +81,20 @@ class _AddProblemScreenState extends State<AddProblemScreen>
 
       try {
         // Upload image if it exists
-        // String? imageUrl;
-        // if (_imageFile != null) {
-        //   imageUrl = await _uploadFile(
-        //     _imageFile!,
-        //     'problems/images/${DateTime.now().millisecondsSinceEpoch}.jpg',
-        //   );
-        // }
-
-        // Upload audio if it exists
-        // String? audioUrl;
-        // if (_audioPath != null) {
-        //   audioUrl = await _uploadFile(
-        //     File(_audioPath!),
-        //     'problems/audio/${DateTime.now().millisecondsSinceEpoch}.m4a',
-        //   );
-        // }
-
-        // Fetch current location
-        //final position = await Geolocator.getCurrentPosition();
-        //final location = '${position.latitude}, ${position.longitude}';
+        String? imageUrl;
+        if (_imageFile != null) {
+          imageUrl = await _uploadFile(_imageFile!);
+        }
 
         // Prepare ProblemModel object
         final problem = ProblemModel(
           farmerId: widget.farmerId,
           assistanceType: _assistanceType,
           description: _description,
-          //audioUrl: audioUrl,
-          //imageUrl: imageUrl,
+          imageUrl: imageUrl,
           categoryTag: _categoryTag,
-          location: widget.userModel.state, //error
+          location:
+              widget.userModel.state, // Assume userModel.state holds location
           status: 'ongoing',
           timestamp: Timestamp.now(),
         );
@@ -120,13 +107,34 @@ class _AddProblemScreenState extends State<AddProblemScreen>
       } catch (e) {
         print('Error submitting problem: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text('Failed to submit problem. Please try again.')),
         );
       } finally {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Widget _buildSubmitButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      onPressed: _isLoading ? null : _submitProblem,
+      child: Text(
+        'Submit',
+        style: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
   }
 
   @override
@@ -272,44 +280,6 @@ class _AddProblemScreenState extends State<AddProblemScreen>
     );
   }
 
-  Widget _buildSubmitButton() {
-    return Container(
-      width: double.infinity,
-      height: 55,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.green, Colors.teal],
-        ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _submitProblem,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-        child: Text(
-          'Submit Problem',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildDescriptionInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,20 +337,24 @@ class _AddProblemScreenState extends State<AddProblemScreen>
         Row(
           children: [
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: _pickImage,
               icon: const Icon(Icons.image),
               label: const Text('Upload Image'),
             ),
             const SizedBox(width: 20),
             ElevatedButton.icon(
               onPressed: () {
-                // Record audio function
+                // Record audio function (can be implemented later)
               },
               icon: const Icon(Icons.mic),
               label: const Text('Record Audio'),
             ),
           ],
         ),
+        if (_imageFile != null) ...[
+          const SizedBox(height: 10),
+          Image.file(_imageFile!, height: 100),
+        ],
       ],
     );
   }
