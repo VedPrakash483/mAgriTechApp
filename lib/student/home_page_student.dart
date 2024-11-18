@@ -21,12 +21,70 @@ class _HomePageStudentState extends State<HomePageStudent> {
   List<ProblemModel> problems = [];
   bool isLoading = true;
   String? errorMessage;
-
   @override
   void initState() {
     super.initState();
     fetchUserAndProblems();
   }
+
+  // Future<void> fetchUserAndProblems() async {
+  //   try {
+  //     // Get current Firebase user
+  //     final firebaseUser = _authService.currentUser;
+  //     if (firebaseUser == null) {
+  //       setState(() {
+  //         errorMessage = "No user is currently logged in.";
+  //         isLoading = false;
+  //       });
+  //       return;
+  //     }
+
+  //     // Fetch user model from Firestore
+  //     final userModel = await _userService.getUserById(firebaseUser.uid);
+  //     if (userModel == null) {
+  //       setState(() {
+  //         errorMessage = "User data not found.";
+  //         isLoading = false;
+  //       });
+  //       return;
+  //     }
+
+  //     setState(() {
+  //       currentUser = userModel;
+  //     });
+
+  //     // Fetch all problems from Firestore
+  //     List<ProblemModel> allProblems = await _userService.getProblems();
+
+  //     // Filter problems based on student's state
+  //     // Filter problems based on student's state and preferred assistance type
+  //     List<ProblemModel> filteredProblems = allProblems.where((problem) {
+  //       // Check if location and state are not null
+  //       if (problem.location == null || userModel.state == null) return false;
+
+  //       // Match state (case-insensitive)
+  //       bool stateMatch =
+  //           problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+  //       // Optional: Add a preferred assistance type filter if you have it in the user model
+  //       // If not, you can remove this condition or modify as needed
+  //       bool assistanceTypeMatch = problem.assistanceType ==
+  //           userModel.specialization; //userModel.specialization == null ||
+
+  //       return stateMatch && assistanceTypeMatch;
+  //     }).toList();
+
+  //     setState(() {
+  //       problems = filteredProblems;
+  //       isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       errorMessage = "Error fetching data: $e";
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
 
   Future<void> fetchUserAndProblems() async {
     try {
@@ -59,13 +117,14 @@ class _HomePageStudentState extends State<HomePageStudent> {
 
       // Filter problems based on student's state and specialization
       List<ProblemModel> filteredProblems = allProblems.where((problem) {
+        // Ensure non-null values
         if (problem.location == null || userModel.state == null) return false;
 
         // Match state (case-insensitive)
         bool stateMatch =
             problem.location!.toLowerCase() == userModel.state!.toLowerCase();
 
-        // Match specialization
+        // Match specialization (case-sensitive for accuracy)
         bool specializationMatch =
             problem.assistanceType == userModel.specialization;
 
@@ -97,15 +156,15 @@ class _HomePageStudentState extends State<HomePageStudent> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Dashboard',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
             icon: const Icon(Icons.exit_to_app),
-            onPressed: signOut,
+            onPressed: () {
+              signOut();
+            },
           ),
         ],
       ),
@@ -120,9 +179,11 @@ class _HomePageStudentState extends State<HomePageStudent> {
                     Expanded(
                       child: problems.isEmpty
                           ? const Center(
-                              child: Text("No problems found for your state."),
-                            )
-                          : ProblemList(problems: problems),
+                              child: Text("No problems found for your state"))
+                          : ProblemList(
+                              problems: problems,
+                              currentUser: currentUser!,
+                            ),
                     ),
                   ],
                 ),
@@ -168,21 +229,33 @@ class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
   }
 
   Widget _buildAnimatedFilter() {
-    return PopupMenuButton<String>(
-      initialValue: _selectedFilter,
-      onSelected: (value) => setState(() => _selectedFilter = value),
-      child: Chip(
-        avatar: const Icon(Icons.filter_list, size: 20),
-        label: Text(_selectedFilter),
-        backgroundColor: Colors.blue.withOpacity(0.1),
-      ),
-      itemBuilder: (context) {
-        return ['Proximity', 'Urgency', 'Category']
-            .map((choice) => PopupMenuItem<String>(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: PopupMenuButton<String>(
+            initialValue: _selectedFilter,
+            onSelected: (String value) {
+              setState(() => _selectedFilter = value);
+              // Implement filter functionality based on _selectedFilter
+            },
+            child: Chip(
+              avatar: const Icon(Icons.filter_list, size: 20),
+              label: Text(_selectedFilter),
+              backgroundColor: Colors.blue.withOpacity(0.1),
+            ),
+            itemBuilder: (BuildContext context) {
+              return ['Proximity', 'Urgency', 'Category'].map((String choice) {
+                return PopupMenuItem<String>(
                   value: choice,
                   child: Text(choice),
-                ))
-            .toList();
+                );
+              }).toList();
+            },
+          ),
+        );
       },
     );
   }
@@ -190,8 +263,13 @@ class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
 
 class ProblemList extends StatelessWidget {
   final List<ProblemModel> problems;
+  final UserModel currentUser; // Add this parameter to pass the user model.
 
-  const ProblemList({super.key, required this.problems});
+  const ProblemList({
+    super.key,
+    required this.problems,
+    required this.currentUser, // Mark as required.
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +278,11 @@ class ProblemList extends StatelessWidget {
       itemCount: problems.length,
       itemBuilder: (context, index) {
         final problem = problems[index];
-        return ProblemCard(problemData: problem, index: index);
+        return ProblemCard(
+          problemData: problem,
+          index: index,
+          userModel: currentUser, // Pass the current user to ProblemCard.
+        );
       },
     );
   }
@@ -209,11 +291,13 @@ class ProblemList extends StatelessWidget {
 class ProblemCard extends StatefulWidget {
   final ProblemModel problemData;
   final int index;
+  final UserModel userModel; // Correctly include this parameter.
 
   const ProblemCard({
     super.key,
     required this.problemData,
     required this.index,
+    required this.userModel, // Mark as required.
   });
 
   @override
@@ -264,8 +348,10 @@ class _ProblemCardState extends State<ProblemCard>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    ProblemDetailsScreen(problemData: widget.problemData),
+                builder: (context) => ProblemDetailsScreen(
+                  problemData: widget.problemData,
+                  userModel: widget.userModel, // Pass the correct user model.
+                ),
               ),
             );
           },
@@ -291,8 +377,8 @@ class _ProblemCardState extends State<ProblemCard>
                 ),
                 const SizedBox(height: 8),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
+                  spacing: 6, // Space between chips
+                  runSpacing: 4, // Space between rows of chips
                   children: [
                     _buildChip(
                       widget.problemData.assistanceType,
@@ -322,7 +408,9 @@ class _ProblemCardState extends State<ProblemCard>
   Widget _buildFavoriteButton() {
     return InkWell(
       customBorder: const CircleBorder(),
-      onTap: () => setState(() => _isFavorite = !_isFavorite),
+      onTap: () {
+        setState(() => _isFavorite = !_isFavorite);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(8),

@@ -10,6 +10,7 @@ class ProblemModel {
   final String? location;
   final String status;
   final Timestamp timestamp;
+  late final List<Map<String, dynamic>> solutions; // Changed to plural for clarity
 
   ProblemModel({
     required this.farmerId,
@@ -18,10 +19,11 @@ class ProblemModel {
     this.audioUrl,
     this.imageUrl,
     required this.categoryTag,
-     this.location,
+    this.location,
     required this.status,
     required this.timestamp,
-  });
+    List<Map<String, dynamic>>? solutions, // Allow null input
+  }) : this.solutions = solutions ?? []; // Default to empty list if null
 
   Map<String, dynamic> toMap() {
     return {
@@ -34,6 +36,7 @@ class ProblemModel {
       'location': location,
       'status': status,
       'timestamp': timestamp,
+      'solutions': solutions, // Ensure this is correctly referenced
     };
   }
 
@@ -48,6 +51,9 @@ class ProblemModel {
       location: map['location'],
       status: map['status'],
       timestamp: map['timestamp'],
+      solutions: (map['solutions'] is List)
+          ? List<Map<String, dynamic>>.from(map['solutions'])
+          : [], // Ensure this is a List, default to empty if not
     );
   }
 }
