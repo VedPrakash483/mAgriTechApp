@@ -2,6 +2,7 @@ import 'package:e_agritech_app/auth/auth_checker.dart';
 import 'package:e_agritech_app/firebase_options.dart';
 import 'package:e_agritech_app/screens/registraion_login/student_login.dart';
 import 'package:e_agritech_app/screens/user_login_selection.dart';
+import 'package:e_agritech_app/screens/welcome_screen.dart';
 import 'package:e_agritech_app/student/home_page_student.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
           visualDensity: VisualDensity.adaptivePlatformDensity,
           fontFamily: GoogleFonts.poppins().fontFamily,
         ),
-        home: const UserLoginSelection(),
+        home: const WelcomeScreen(),
       ),
     );
   }

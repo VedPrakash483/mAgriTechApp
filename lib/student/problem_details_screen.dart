@@ -238,42 +238,34 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
 
 Future<void> _postSolution(String solutionText) async {
   try {
-    final problemId = widget.problemData.farmerId; // Document ID
-    final problemRef = FirebaseFirestore.instance.collection('problems').doc(problemId);
+    final farmerId = widget.problemData.farmerId; // Get the farmerId
+    print('farmerId: $farmerId'); // Debugging: Print the farmerId
 
-    print('Attempting to update document at: problems/$problemId');
+    // Query the Firestore collection for documents with the specified farmerId
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('problems')
+        .where('farmerId', isEqualTo: farmerId)
+        .get();
 
-    // Fetch document snapshot
-    final docSnapshot = await problemRef.get();
-
-    // Debugging: Log the document snapshot
-    print('Document snapshot data: ${docSnapshot.data()}');
-
-    if (!docSnapshot.exists) {
-      print('Document does not exist!');
+    // Check if any documents were found
+    if (querySnapshot.docs.isEmpty) {
+      print('No documents found with farmerId: $farmerId');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('The problem document does not exist.'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
+      return; // Exit if no document is found
     }
 
-    // Fetch existing solutions or initialize an empty array if not found
-    List<Map<String, dynamic>> existingSolutions = List<Map<String, dynamic>>.from(
-      docSnapshot.data()?['solutions'] ?? [],
-    );
+    // Assuming you want to update the first document found
+    final problemRef = querySnapshot.docs.first.reference;
 
-    // Add the new solution to the solutions list
-    existingSolutions.add({
-      'content': solutionText,
-      'addedBy': widget.userModel.name,
-      'timestamp': FieldValue.serverTimestamp(),
+    // Update the Firestore document with the new solution text
+    await problemRef.update({
+      'solution': solutionText, // Update the solution field
     });
-
-    // Update the Firestore document with the new solutions array
-    await problemRef.update({'solutions': existingSolutions});
 
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
@@ -285,7 +277,7 @@ Future<void> _postSolution(String solutionText) async {
 
     // Update the local state to reflect the new solution
     setState(() {
-      widget.problemData.solutions = existingSolutions;
+      widget.problemData.solution = solutionText; // Update local state
     });
   } catch (e) {
     print('Error adding solution: $e');
@@ -297,6 +289,7 @@ Future<void> _postSolution(String solutionText) async {
     );
   }
 }
+
 
 
 
