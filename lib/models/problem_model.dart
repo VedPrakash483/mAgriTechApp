@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProblemModel {
+  final String problemId; // Unique identifier for the problem
   final String farmerId;
   final String assistanceType; // Medical or Farm
   final String description;
@@ -8,11 +9,12 @@ class ProblemModel {
   final String? imageUrl;
   final String categoryTag;
   final String? location;
+  String solution; // Change this to a non-final field
   final String status;
   final Timestamp timestamp;
-  late final String solution; // Changed to a single string for the solution
 
   ProblemModel({
+    required this.problemId,
     required this.farmerId,
     required this.assistanceType,
     required this.description,
@@ -20,13 +22,15 @@ class ProblemModel {
     this.imageUrl,
     required this.categoryTag,
     this.location,
+    this.solution = '', // Default to an empty string if not provided
     required this.status,
     required this.timestamp,
-    this.solution = '', // Default to an empty string if not provided
   });
 
+  // Convert the ProblemModel instance to a Map for Firestore
   Map<String, dynamic> toMap() {
     return {
+      'problemId': problemId,
       'farmerId': farmerId,
       'assistanceType': assistanceType,
       'description': description,
@@ -34,24 +38,26 @@ class ProblemModel {
       'imageUrl': imageUrl,
       'categoryTag': categoryTag,
       'location': location,
+      'solution': solution, // Include solution in the map
       'status': status,
       'timestamp': timestamp,
-      'solution': solution, // Store the solution as a single string
     };
   }
 
+  // Create a ProblemModel instance from a Map
   factory ProblemModel.fromMap(Map<String, dynamic> map) {
     return ProblemModel(
-      farmerId: map['farmerId'],
-      assistanceType: map['assistanceType'],
-      description: map['description'],
-      audioUrl: map['audioUrl'],
-      imageUrl: map['imageUrl'],
-      categoryTag: map['categoryTag'],
-      location: map['location'],
-      status: map['status'],
-      timestamp: map['timestamp'],
-      solution: map['solution'] ?? '', // Ensure this is a string, default to empty if not
+      problemId: map['problemId'] as String,
+      farmerId: map['farmerId'] as String,
+      assistanceType: map['assistanceType'] as String,
+      description: map['description'] as String,
+      audioUrl: map['audioUrl'] as String?,
+      imageUrl: map['imageUrl'] as String?,
+      categoryTag: map['categoryTag'] as String,
+      location: map['location'] as String?,
+      solution: map['solution'] as String? ?? '', // Ensure this is a string, default to empty if not
+      status: map['status'] as String,
+      timestamp: map['timestamp'] as Timestamp,
     );
   }
 }

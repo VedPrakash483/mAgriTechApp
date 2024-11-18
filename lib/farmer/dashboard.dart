@@ -57,79 +57,80 @@ class _HomePageFarmerState extends State<HomePageFarmer> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('Farmer Dashboard', style: TextStyle(fontSize: 22)),
-        elevation: 2,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF66BB6A),
-                Color(0xFF43A047)
-              ], // accentGreen gradient
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.grey[100],
+    appBar: AppBar(
+      title: const Text('Farmer Dashboard', style: TextStyle(fontSize: 22)),
+      elevation: 2,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF66BB6A),
+              Color(0xFF43A047)
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
       ),
-      body: farmerId.isEmpty || userModel == null
-          ? const Center(child: CircularProgressIndicator())
-          : StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('problems')
-                  .where('farmerId', isEqualTo: farmerId)
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+    ),
+    body: farmerId.isEmpty || userModel == null
+        ? const Center(child: CircularProgressIndicator())
+        : StreamBuilder<QuerySnapshot>(
+            stream: _firestore
+                .collection('problems')
+                .where('farmerId', isEqualTo: farmerId)
+                .orderBy('timestamp', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+ if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                      child: Text('No problems found',
-                          style: TextStyle(fontSize: 16, color: Colors.grey)));
-                }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                print("No problems found for farmerId: $farmerId"); // Debugging: No problems found
+                return const Center(
+                    child: Text('No problems found',
+                        style: TextStyle(fontSize: 16, color: Colors.grey)));
+              }
 
-                List<ProblemModel> problems = snapshot.data!.docs
-                    .map((doc) => ProblemModel.fromMap(
-                        doc.data() as Map<String, dynamic>))
-                    .toList();
+              List<ProblemModel> problems = snapshot.data!.docs
+                  .map((doc) => ProblemModel.fromMap(
+                      doc.data() as Map<String, dynamic>))
+                  .toList();
 
-                return Column(
-                  children: [
-                    _buildSummaryCards(problems),
-                    Expanded(child: _buildProblemsList(problems)),
-                  ],
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (userModel != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => AddProblemScreen(
-                        farmerId: farmerId,
-                        userModel: userModel!,  // Pass the initialized userModel here
-                      )),
-            );
-          }
-        },
-        backgroundColor: const Color(0xFF388E3C),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
+              return Column(
+                children: [
+                  _buildSummaryCards(problems),
+                  Expanded(child: _buildProblemsList(problems)),
+                ],
+              );
+            },
+          ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        if (userModel != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => AddProblemScreen(
+                      farmerId: farmerId,
+                      userModel: userModel!,
+                    )),
+          );
+        }
+      },
+      backgroundColor: const Color(0xFF388E3C),
+      child: const Icon(Icons.add, color: Colors.white),
+    ),
+  );
+}
 
   Widget _buildSummaryCards(List<ProblemModel> problems) {
     int completed = problems.where((p) => p.status == 'completed').length;

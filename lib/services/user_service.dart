@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart'; // Import the uuid package
 import '/models/user_model.dart';
 import '/models/problem_model.dart';
 
@@ -8,7 +9,7 @@ class UserService {
   // Save initial user information to Firestore upon registration
   Future<void> saveUserInfo(UserModel userModel) async {
     await _firestore.collection('users').doc(userModel.uid).set(userModel.toMap());
-    print("User info saved successfully for ${userModel.email}");
+    print("User  info saved successfully for ${userModel.email}");
   }
 
   // Get user information by UID
@@ -34,7 +35,11 @@ class UserService {
     required String categoryTag,
     required String location,
   }) async {
+    // Generate a unique problemId
+    String problemId = Uuid().v4(); // Generate a unique ID
+
     ProblemModel problem = ProblemModel(
+      problemId: problemId, // Pass the generated problemId
       farmerId: farmerId,
       assistanceType: assistanceType,
       description: description,

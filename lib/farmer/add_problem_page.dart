@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:uuid/uuid.dart';
 
 class AddProblemScreen extends StatefulWidget {
   final String farmerId;
@@ -85,9 +86,11 @@ class _AddProblemScreenState extends State<AddProblemScreen>
         if (_imageFile != null) {
           imageUrl = await _uploadFile(_imageFile!);
         }
-
+        
+        String problemId = Uuid().v4();
         // Prepare ProblemModel object
         final problem = ProblemModel(
+          problemId: problemId,
           farmerId: widget.farmerId,
           assistanceType: _assistanceType,
           description: _description,

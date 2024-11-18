@@ -130,37 +130,44 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
   }
 
   Widget _buildSolutionSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Add Solution',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Add Solution',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildActionButton(
+                  Icons.text_fields, 'Text', _showTextInputBottomSheet),
+              _buildActionButton(Icons.mic, 'Voice', () {
+                // Implement voice input functionality here
+              }),
+              _buildActionButton(Icons.attach_file, 'Attach', () {
+                // Implement file attachment functionality here
+              }),
+            ],
+          ),
+          if (widget.problemData.solution.isNotEmpty)
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildActionButton(
-                    Icons.text_fields, 'Text', _showTextInputBottomSheet),
-                _buildActionButton(Icons.mic, 'Voice', () {
-                  // Implement voice input functionality here
-                }),
-                _buildActionButton(Icons.attach_file, 'Attach', () {
-                  // Implement file attachment functionality here
-                }),
-              ],
+          if (widget.problemData.solution.isNotEmpty)
+            Text(
+              widget.problemData.solution,
+              style: const TextStyle(fontSize: 16),
             ),
-          ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildActionButton(
       IconData icon, String label, VoidCallback onPressed) {
@@ -246,18 +253,18 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
 
 Future<void> _postSolution(String solutionText) async {
   try {
-    final farmerId = widget.problemData.farmerId; // Get the farmerId
-    print('farmerId: $farmerId'); // Debugging: Print the farmerId
+    final problemId = widget.problemData.problemId; // Get the farmerId
+    print('farmerId: $problemId'); // Debugging: Print the farmerId
 
     // Query the Firestore collection for documents with the specified farmerId
     final querySnapshot = await FirebaseFirestore.instance
         .collection('problems')
-        .where('farmerId', isEqualTo: farmerId)
+        .where('problemId', isEqualTo: problemId)
         .get();
 
     // Check if any documents were found
     if (querySnapshot.docs.isEmpty) {
-      print('No documents found with farmerId: $farmerId');
+      print('No documents found with farmerId: $problemId');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('The problem document does not exist.'),
