@@ -39,7 +39,7 @@ dependencies:
   image_picker:
   loading_animation_widget: ^1.2.0+4
   animate_do:
-
+  
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -7,7 +7,8 @@ class ProblemDetailsScreen extends StatefulWidget {
   final ProblemModel problemData;
   final UserModel userModel;
 
-  const ProblemDetailsScreen({super.key, required this.problemData, required this.userModel});
+  const ProblemDetailsScreen(
+      {super.key, required this.problemData, required this.userModel});
 
   @override
   State<ProblemDetailsScreen> createState() => _ProblemDetailsScreenState();
@@ -60,6 +61,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               _buildSolutionSection(),
               const SizedBox(height: 24),
               _buildRequestVisitButton(),
+              const SizedBox(height: 24),
+              Image.network('${widget.problemData.imageUrl}'),
             ],
           ),
         ),
@@ -76,11 +79,13 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(Icons.medical_services, 'Type', widget.problemData.assistanceType),
+            _buildInfoRow(Icons.medical_services, 'Type',
+                widget.problemData.assistanceType),
             const SizedBox(height: 12),
             _buildInfoRow(Icons.warning, 'Status', widget.problemData.status),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.location_on, 'Location', widget.problemData.location ?? 'Unknown'),
+            _buildInfoRow(Icons.location_on, 'Location',
+                widget.problemData.location ?? 'Unknown'),
             const SizedBox(height: 12),
           ],
         ),
@@ -116,7 +121,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(widget.problemData.description, style: const TextStyle(fontSize: 16)),
+            Text(widget.problemData.description,
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -140,7 +146,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildActionButton(Icons.text_fields, 'Text', _showTextInputBottomSheet),
+                _buildActionButton(
+                    Icons.text_fields, 'Text', _showTextInputBottomSheet),
                 _buildActionButton(Icons.mic, 'Voice', () {
                   // Implement voice input functionality here
                 }),
@@ -155,7 +162,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
+  Widget _buildActionButton(
+      IconData icon, String label, VoidCallback onPressed) {
     return Column(
       children: [
         InkWell(
@@ -267,13 +275,13 @@ Future<void> _postSolution(String solutionText) async {
       'solution': solutionText, // Update the solution field
     });
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Solution added successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Solution added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
     // Update the local state to reflect the new solution
     setState(() {
