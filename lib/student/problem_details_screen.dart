@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
 import 'package:flutter/material.dart';
 
@@ -58,6 +57,8 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               _buildSolutionSection(),
               const SizedBox(height: 24),
               _buildRequestVisitButton(),
+              const SizedBox(height: 24),
+              Image.network('${widget.problemData.imageUrl}'),
             ],
           ),
         ),

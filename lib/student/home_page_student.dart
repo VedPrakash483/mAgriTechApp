@@ -21,128 +21,68 @@ class _HomePageStudentState extends State<HomePageStudent> {
   List<ProblemModel> problems = [];
   bool isLoading = true;
   String? errorMessage;
+
   @override
   void initState() {
     super.initState();
     fetchUserAndProblems();
   }
 
-  // Future<void> fetchUserAndProblems() async {
-  //   try {
-  //     // Get current Firebase user
-  //     final firebaseUser = _authService.currentUser;
-  //     if (firebaseUser == null) {
-  //       setState(() {
-  //         errorMessage = "No user is currently logged in.";
-  //         isLoading = false;
-  //       });
-  //       return;
-  //     }
-
-  //     // Fetch user model from Firestore
-  //     final userModel = await _userService.getUserById(firebaseUser.uid);
-  //     if (userModel == null) {
-  //       setState(() {
-  //         errorMessage = "User data not found.";
-  //         isLoading = false;
-  //       });
-  //       return;
-  //     }
-
-  //     setState(() {
-  //       currentUser = userModel;
-  //     });
-
-  //     // Fetch all problems from Firestore
-  //     List<ProblemModel> allProblems = await _userService.getProblems();
-
-  //     // Filter problems based on student's state
-  //     // Filter problems based on student's state and preferred assistance type
-  //     List<ProblemModel> filteredProblems = allProblems.where((problem) {
-  //       // Check if location and state are not null
-  //       if (problem.location == null || userModel.state == null) return false;
-
-  //       // Match state (case-insensitive)
-  //       bool stateMatch =
-  //           problem.location!.toLowerCase() == userModel.state!.toLowerCase();
-
-  //       // Optional: Add a preferred assistance type filter if you have it in the user model
-  //       // If not, you can remove this condition or modify as needed
-  //       bool assistanceTypeMatch = problem.assistanceType ==
-  //           userModel.specialization; //userModel.specialization == null ||
-
-  //       return stateMatch && assistanceTypeMatch;
-  //     }).toList();
-
-  //     setState(() {
-  //       problems = filteredProblems;
-  //       isLoading = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       errorMessage = "Error fetching data: $e";
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
   Future<void> fetchUserAndProblems() async {
-  try {
-    // Get current Firebase user
-    final firebaseUser = _authService.currentUser;
-    if (firebaseUser == null) {
+    try {
+      // Get current Firebase user
+      final firebaseUser = _authService.currentUser;
+      if (firebaseUser == null) {
+        setState(() {
+          errorMessage = "No user is currently logged in.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch user model from Firestore
+      final userModel = await _userService.getUserById(firebaseUser.uid);
+      if (userModel == null) {
+        setState(() {
+          errorMessage = "User data not found.";
+          isLoading = false;
+        });
+        return;
+      }
+
       setState(() {
-        errorMessage = "No user is currently logged in.";
+        currentUser = userModel;
+      });
+
+      // Fetch all problems from Firestore
+      List<ProblemModel> allProblems = await _userService.getProblems();
+
+      // Filter problems based on student's state and specialization
+      List<ProblemModel> filteredProblems = allProblems.where((problem) {
+        if (problem.location == null || userModel.state == null) return false;
+
+        // Match state (case-insensitive)
+        bool stateMatch =
+            problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+        // Match specialization
+        bool specializationMatch =
+            problem.assistanceType == userModel.specialization;
+
+        return stateMatch && specializationMatch;
+      }).toList();
+
+      setState(() {
+        problems = filteredProblems;
         isLoading = false;
       });
-      return;
-    }
-
-    // Fetch user model from Firestore
-    final userModel = await _userService.getUserById(firebaseUser.uid);
-    if (userModel == null) {
+    } catch (e) {
       setState(() {
-        errorMessage = "User data not found.";
+        errorMessage = "Error fetching data: $e";
         isLoading = false;
       });
-      return;
     }
-
-    setState(() {
-      currentUser = userModel;
-    });
-
-    // Fetch all problems from Firestore
-    List<ProblemModel> allProblems = await _userService.getProblems();
-
-    // Filter problems based on student's state and specialization
-    List<ProblemModel> filteredProblems = allProblems.where((problem) {
-      // Ensure non-null values
-      if (problem.location == null || userModel.state == null) return false;
-
-      // Match state (case-insensitive)
-      bool stateMatch =
-          problem.location!.toLowerCase() == userModel.state!.toLowerCase();
-
-      // Match specialization (case-sensitive for accuracy)
-      bool specializationMatch =
-          problem.assistanceType == userModel.specialization;
-
-      return stateMatch && specializationMatch;
-    }).toList();
-
-    setState(() {
-      problems = filteredProblems;
-      isLoading = false;
-    });
-  } catch (e) {
-    setState(() {
-      errorMessage = "Error fetching data: $e";
-      isLoading = false;
-    });
   }
-}
-
 
   void signOut() async {
     try {
@@ -157,15 +97,15 @@ class _HomePageStudentState extends State<HomePageStudent> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: const Text('Dashboard',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
             icon: const Icon(Icons.exit_to_app),
-            onPressed: () {
-              signOut();
-            },
+            onPressed: signOut,
           ),
         ],
       ),
@@ -180,7 +120,8 @@ class _HomePageStudentState extends State<HomePageStudent> {
                     Expanded(
                       child: problems.isEmpty
                           ? const Center(
-                              child: Text("No problems found for your state"))
+                              child: Text("No problems found for your state."),
+                            )
                           : ProblemList(problems: problems),
                     ),
                   ],
@@ -227,33 +168,21 @@ class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
   }
 
   Widget _buildAnimatedFilter() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: PopupMenuButton<String>(
-            initialValue: _selectedFilter,
-            onSelected: (String value) {
-              setState(() => _selectedFilter = value);
-              // Implement filter functionality based on _selectedFilter
-            },
-            child: Chip(
-              avatar: const Icon(Icons.filter_list, size: 20),
-              label: Text(_selectedFilter),
-              backgroundColor: Colors.blue.withOpacity(0.1),
-            ),
-            itemBuilder: (BuildContext context) {
-              return ['Proximity', 'Urgency', 'Category'].map((String choice) {
-                return PopupMenuItem<String>(
+    return PopupMenuButton<String>(
+      initialValue: _selectedFilter,
+      onSelected: (value) => setState(() => _selectedFilter = value),
+      child: Chip(
+        avatar: const Icon(Icons.filter_list, size: 20),
+        label: Text(_selectedFilter),
+        backgroundColor: Colors.blue.withOpacity(0.1),
+      ),
+      itemBuilder: (context) {
+        return ['Proximity', 'Urgency', 'Category']
+            .map((choice) => PopupMenuItem<String>(
                   value: choice,
                   child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
-        );
+                ))
+            .toList();
       },
     );
   }
@@ -271,10 +200,7 @@ class ProblemList extends StatelessWidget {
       itemCount: problems.length,
       itemBuilder: (context, index) {
         final problem = problems[index];
-        return ProblemCard(
-          problemData: problem,
-          index: index,
-        );
+        return ProblemCard(problemData: problem, index: index);
       },
     );
   }
@@ -365,8 +291,8 @@ class _ProblemCardState extends State<ProblemCard>
                 ),
                 const SizedBox(height: 8),
                 Wrap(
-                  spacing: 6, // Space between chips
-                  runSpacing: 4, // Space between rows of chips
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     _buildChip(
                       widget.problemData.assistanceType,
@@ -396,9 +322,7 @@ class _ProblemCardState extends State<ProblemCard>
   Widget _buildFavoriteButton() {
     return InkWell(
       customBorder: const CircleBorder(),
-      onTap: () {
-        setState(() => _isFavorite = !_isFavorite);
-      },
+      onTap: () => setState(() => _isFavorite = !_isFavorite),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(8),
