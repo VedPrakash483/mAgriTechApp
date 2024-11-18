@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_agritech_app/models/problem_model.dart';
+import 'package:e_agritech_app/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class ProblemDetailsScreen extends StatefulWidget {
   final ProblemModel problemData;
+  final UserModel userModel;
 
-  const ProblemDetailsScreen({super.key, required this.problemData});
+  const ProblemDetailsScreen({super.key, required this.problemData, required this.userModel});
 
   @override
   State<ProblemDetailsScreen> createState() => _ProblemDetailsScreenState();
@@ -74,16 +76,12 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(Icons.medical_services, 'Type',
-                widget.problemData.assistanceType),
+            _buildInfoRow(Icons.medical_services, 'Type', widget.problemData.assistanceType),
             const SizedBox(height: 12),
             _buildInfoRow(Icons.warning, 'Status', widget.problemData.status),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.location_on, 'Location',
-                widget.problemData.location ?? 'Unknown'),
-            const SizedBox(
-              height: 12,
-            ),
+            _buildInfoRow(Icons.location_on, 'Location', widget.problemData.location ?? 'Unknown'),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -118,8 +116,7 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(widget.problemData.description,
-                style: const TextStyle(fontSize: 16)),
+            Text(widget.problemData.description, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -143,9 +140,13 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildActionButton(Icons.text_fields, 'Text'),
-                _buildActionButton(Icons.mic, 'Voice'),
-                _buildActionButton(Icons.attach_file, 'Attach'),
+                _buildActionButton(Icons.text_fields, 'Text', _showTextInputBottomSheet),
+                _buildActionButton(Icons.mic, 'Voice', () {
+                  // Implement voice input functionality here
+                }),
+                _buildActionButton(Icons.attach_file, 'Attach', () {
+                  // Implement file attachment functionality here
+                }),
               ],
             ),
           ],
@@ -154,13 +155,11 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label) {
+  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
     return Column(
       children: [
         InkWell(
-          onTap: () {
-            // Implement solution addition functionality here
-          },
+          onTap: onPressed,
           borderRadius: BorderRadius.circular(30),
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -180,6 +179,126 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
       ],
     );
   }
+
+  void _showTextInputBottomSheet() {
+    final TextEditingController solutionController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: solutionController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: 'Enter your solution',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  if (solutionController.text.isNotEmpty) {
+                    await _postSolution(solutionController.text);
+                    solutionController.clear();
+                    Navigator.of(context).pop();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Solution cannot be empty.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Submit Solution',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+Future<void> _postSolution(String solutionText) async {
+  try {
+    final problemId = widget.problemData.farmerId; // Document ID
+    final problemRef = FirebaseFirestore.instance.collection('problems').doc(problemId);
+
+    print('Attempting to update document at: problems/$problemId');
+
+    // Fetch document snapshot
+    final docSnapshot = await problemRef.get();
+
+    // Debugging: Log the document snapshot
+    print('Document snapshot data: ${docSnapshot.data()}');
+
+    if (!docSnapshot.exists) {
+      print('Document does not exist!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The problem document does not exist.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Fetch existing solutions or initialize an empty array if not found
+    List<Map<String, dynamic>> existingSolutions = List<Map<String, dynamic>>.from(
+      docSnapshot.data()?['solutions'] ?? [],
+    );
+
+    // Add the new solution to the solutions list
+    existingSolutions.add({
+      'content': solutionText,
+      'addedBy': widget.userModel.name,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    // Update the Firestore document with the new solutions array
+    await problemRef.update({'solutions': existingSolutions});
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Solution added successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // Update the local state to reflect the new solution
+    setState(() {
+      widget.problemData.solutions = existingSolutions;
+    });
+  } catch (e) {
+    print('Error adding solution: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error adding solution: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
+
 
   Widget _buildRequestVisitButton() {
     return Container(
@@ -219,48 +338,29 @@ class _ProblemDetailsScreenState extends State<ProblemDetailsScreen>
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return _buildAnimatedDialog(
-          AlertDialog(
-            title: const Text("Confirm Request"),
-            content: const Text(
-              "Are you sure you want to request a visit for this problem?",
+        return AlertDialog(
+          title: const Text("Confirm Request"),
+          content: const Text(
+            "Are you sure you want to request a visit for this problem?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("Cancel"),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showSuccessSnackbar();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showSuccessSnackbar();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                ),
-                child: const Text("Confirm"),
-              ),
-            ],
-          ),
+              child: const Text("Confirm"),
+            ),
+          ],
         );
       },
-    );
-  }
-
-  Widget _buildAnimatedDialog(Widget child) {
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 300),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: child,
     );
   }
 
@@ -336,111 +436,6 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     );
   }
 
-  Widget _buildSolutionSection() {
-    final TextEditingController solutionController = TextEditingController();
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Add Solution',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: solutionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: 'Enter your solution',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                if (solutionController.text.isNotEmpty) {
-                  await _postSolution(solutionController.text);
-                  solutionController.clear();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Solution cannot be empty.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Submit Solution',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-// Future<void> _postSolution(String solutionText) async {
-//   try {
-//     final problemId = widget.problemData.id; // Assuming `id` is the document ID
-//     final studentId = currentUser?.uid ?? 'Unknown'; // Current student's UID
-//     final studentName = currentUser?.name ?? 'Anonymous'; // Current student's name
-
-//     // Fetch existing solutions
-//     final existingSolutions = widget.problemData.solution.isNotEmpty
-//         ? List<Map<String, dynamic>>.from(widget.problemData.solution)
-//         : [];
-
-//     // Add new solution
-//     existingSolutions.add({
-//       'studentId': studentId,
-//       'studentName': studentName,
-//       'content': solutionText,
-//       'timestamp': DateTime.now().toIso8601String(),
-//     });
-
-//     // Update Firestore
-//     await FirebaseFirestore.instance
-//         .collection('problems')
-//         .doc(problemId)
-//         .update({'solution': existingSolutions});
-
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(
-//         content: Text('Solution added successfully!'),
-//         backgroundColor: Colors.green,
-//       ),
-//     );
-
-//     // Update local state
-//     setState(() {
-//       widget.problemData.solution = existingSolutions;
-//     });
-//   } catch (e) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text('Error adding solution: $e'),
-//         backgroundColor: Colors.red,
-//       ),
-//     );
-//   }
-// }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -471,5 +466,3 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     );
   }
 }
-
-_postSolution(String text) {}

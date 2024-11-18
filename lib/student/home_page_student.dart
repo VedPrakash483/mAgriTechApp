@@ -1,268 +1,273 @@
-import 'package:e_agritech_app/services/firebase_auth_service.dart';
-import 'package:e_agritech_app/services/user_service.dart';
-import 'package:e_agritech_app/student/problem_details_screen.dart';
-import 'package:e_agritech_app/student/sidebar.dart';
-import 'package:flutter/material.dart';
-import '/models/user_model.dart';
-import '/models/problem_model.dart';
+  import 'package:e_agritech_app/services/firebase_auth_service.dart';
+  import 'package:e_agritech_app/services/user_service.dart';
+  import 'package:e_agritech_app/student/problem_details_screen.dart';
+  import 'package:e_agritech_app/student/sidebar.dart';
+  import 'package:flutter/material.dart';
+  import '/models/user_model.dart';
+  import '/models/problem_model.dart';
 
-class HomePageStudent extends StatefulWidget {
-  const HomePageStudent({super.key});
+  class HomePageStudent extends StatefulWidget {
+    const HomePageStudent({super.key});
 
-  @override
-  State<HomePageStudent> createState() => _HomePageStudentState();
-}
-
-class _HomePageStudentState extends State<HomePageStudent> {
-  final FirebaseAuthService _authService = FirebaseAuthService();
-  final UserService _userService = UserService();
-
-  UserModel? currentUser;
-  List<ProblemModel> problems = [];
-  bool isLoading = true;
-  String? errorMessage;
-  @override
-  void initState() {
-    super.initState();
-    fetchUserAndProblems();
+    @override
+    State<HomePageStudent> createState() => _HomePageStudentState();
   }
 
-  // Future<void> fetchUserAndProblems() async {
-  //   try {
-  //     // Get current Firebase user
-  //     final firebaseUser = _authService.currentUser;
-  //     if (firebaseUser == null) {
-  //       setState(() {
-  //         errorMessage = "No user is currently logged in.";
-  //         isLoading = false;
-  //       });
-  //       return;
-  //     }
+  class _HomePageStudentState extends State<HomePageStudent> {
+    final FirebaseAuthService _authService = FirebaseAuthService();
+    final UserService _userService = UserService();
 
-  //     // Fetch user model from Firestore
-  //     final userModel = await _userService.getUserById(firebaseUser.uid);
-  //     if (userModel == null) {
-  //       setState(() {
-  //         errorMessage = "User data not found.";
-  //         isLoading = false;
-  //       });
-  //       return;
-  //     }
-
-  //     setState(() {
-  //       currentUser = userModel;
-  //     });
-
-  //     // Fetch all problems from Firestore
-  //     List<ProblemModel> allProblems = await _userService.getProblems();
-
-  //     // Filter problems based on student's state
-  //     // Filter problems based on student's state and preferred assistance type
-  //     List<ProblemModel> filteredProblems = allProblems.where((problem) {
-  //       // Check if location and state are not null
-  //       if (problem.location == null || userModel.state == null) return false;
-
-  //       // Match state (case-insensitive)
-  //       bool stateMatch =
-  //           problem.location!.toLowerCase() == userModel.state!.toLowerCase();
-
-  //       // Optional: Add a preferred assistance type filter if you have it in the user model
-  //       // If not, you can remove this condition or modify as needed
-  //       bool assistanceTypeMatch = problem.assistanceType ==
-  //           userModel.specialization; //userModel.specialization == null ||
-
-  //       return stateMatch && assistanceTypeMatch;
-  //     }).toList();
-
-  //     setState(() {
-  //       problems = filteredProblems;
-  //       isLoading = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       errorMessage = "Error fetching data: $e";
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
-  Future<void> fetchUserAndProblems() async {
-  try {
-    // Get current Firebase user
-    final firebaseUser = _authService.currentUser;
-    if (firebaseUser == null) {
-      setState(() {
-        errorMessage = "No user is currently logged in.";
-        isLoading = false;
-      });
-      return;
+    UserModel? currentUser;
+    List<ProblemModel> problems = [];
+    bool isLoading = true;
+    String? errorMessage;
+    @override
+    void initState() {
+      super.initState();
+      fetchUserAndProblems();
     }
 
-    // Fetch user model from Firestore
-    final userModel = await _userService.getUserById(firebaseUser.uid);
-    if (userModel == null) {
-      setState(() {
-        errorMessage = "User data not found.";
-        isLoading = false;
-      });
-      return;
-    }
+    // Future<void> fetchUserAndProblems() async {
+    //   try {
+    //     // Get current Firebase user
+    //     final firebaseUser = _authService.currentUser;
+    //     if (firebaseUser == null) {
+    //       setState(() {
+    //         errorMessage = "No user is currently logged in.";
+    //         isLoading = false;
+    //       });
+    //       return;
+    //     }
 
-    setState(() {
-      currentUser = userModel;
-    });
+    //     // Fetch user model from Firestore
+    //     final userModel = await _userService.getUserById(firebaseUser.uid);
+    //     if (userModel == null) {
+    //       setState(() {
+    //         errorMessage = "User data not found.";
+    //         isLoading = false;
+    //       });
+    //       return;
+    //     }
 
-    // Fetch all problems from Firestore
-    List<ProblemModel> allProblems = await _userService.getProblems();
+    //     setState(() {
+    //       currentUser = userModel;
+    //     });
 
-    // Filter problems based on student's state and specialization
-    List<ProblemModel> filteredProblems = allProblems.where((problem) {
-      // Ensure non-null values
-      if (problem.location == null || userModel.state == null) return false;
+    //     // Fetch all problems from Firestore
+    //     List<ProblemModel> allProblems = await _userService.getProblems();
 
-      // Match state (case-insensitive)
-      bool stateMatch =
-          problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+    //     // Filter problems based on student's state
+    //     // Filter problems based on student's state and preferred assistance type
+    //     List<ProblemModel> filteredProblems = allProblems.where((problem) {
+    //       // Check if location and state are not null
+    //       if (problem.location == null || userModel.state == null) return false;
 
-      // Match specialization (case-sensitive for accuracy)
-      bool specializationMatch =
-          problem.assistanceType == userModel.specialization;
+    //       // Match state (case-insensitive)
+    //       bool stateMatch =
+    //           problem.location!.toLowerCase() == userModel.state!.toLowerCase();
 
-      return stateMatch && specializationMatch;
-    }).toList();
+    //       // Optional: Add a preferred assistance type filter if you have it in the user model
+    //       // If not, you can remove this condition or modify as needed
+    //       bool assistanceTypeMatch = problem.assistanceType ==
+    //           userModel.specialization; //userModel.specialization == null ||
 
-    setState(() {
-      problems = filteredProblems;
-      isLoading = false;
-    });
-  } catch (e) {
-    setState(() {
-      errorMessage = "Error fetching data: $e";
-      isLoading = false;
-    });
-  }
-}
+    //       return stateMatch && assistanceTypeMatch;
+    //     }).toList();
 
+    //     setState(() {
+    //       problems = filteredProblems;
+    //       isLoading = false;
+    //     });
+    //   } catch (e) {
+    //     setState(() {
+    //       errorMessage = "Error fetching data: $e";
+    //       isLoading = false;
+    //     });
+    //   }
+    // }
 
-  void signOut() async {
+    Future<void> fetchUserAndProblems() async {
     try {
-      await _authService.signOutUser();
+      // Get current Firebase user
+      final firebaseUser = _authService.currentUser;
+      if (firebaseUser == null) {
+        setState(() {
+          errorMessage = "No user is currently logged in.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch user model from Firestore
+      final userModel = await _userService.getUserById(firebaseUser.uid);
+      if (userModel == null) {
+        setState(() {
+          errorMessage = "User data not found.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        currentUser = userModel;
+      });
+
+      // Fetch all problems from Firestore
+      List<ProblemModel> allProblems = await _userService.getProblems();
+
+      // Filter problems based on student's state and specialization
+      List<ProblemModel> filteredProblems = allProblems.where((problem) {
+        // Ensure non-null values
+        if (problem.location == null || userModel.state == null) return false;
+
+        // Match state (case-insensitive)
+        bool stateMatch =
+            problem.location!.toLowerCase() == userModel.state!.toLowerCase();
+
+        // Match specialization (case-sensitive for accuracy)
+        bool specializationMatch =
+            problem.assistanceType == userModel.specialization;
+
+        return stateMatch && specializationMatch;
+      }).toList();
+
+      setState(() {
+        problems = filteredProblems;
+        isLoading = false;
+      });
     } catch (e) {
-      debugPrint("Error signing out: $e");
+      setState(() {
+        errorMessage = "Error fetching data: $e";
+        isLoading = false;
+      });
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text('Dashboard',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () {
-              signOut();
-            },
-          ),
-        ],
-      ),
-      drawer: currentUser != null ? Sidebar(userModel: currentUser!) : null,
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : Column(
-                  children: [
-                    const FilteredProblemFeed(),
-                    Expanded(
-                      child: problems.isEmpty
-                          ? const Center(
-                              child: Text("No problems found for your state"))
-                          : ProblemList(problems: problems),
-                    ),
-                  ],
-                ),
-    );
-  }
-}
 
-class FilteredProblemFeed extends StatefulWidget {
-  const FilteredProblemFeed({super.key});
+    void signOut() async {
+      try {
+        await _authService.signOutUser();
+      } catch (e) {
+        debugPrint("Error signing out: $e");
+      }
+    }
 
-  @override
-  State<FilteredProblemFeed> createState() => _FilteredProblemFeedState();
-}
-
-class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
-  String _selectedFilter = 'Proximity';
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Filtered Problem Feed",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          _buildAnimatedFilter(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnimatedFilter() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: PopupMenuButton<String>(
-            initialValue: _selectedFilter,
-            onSelected: (String value) {
-              setState(() => _selectedFilter = value);
-              // Implement filter functionality based on _selectedFilter
-            },
-            child: Chip(
-              avatar: const Icon(Icons.filter_list, size: 20),
-              label: Text(_selectedFilter),
-              backgroundColor: Colors.blue.withOpacity(0.1),
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: const Text('Dashboard',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.blueAccent,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: () {
+                signOut();
+              },
             ),
-            itemBuilder: (BuildContext context) {
-              return ['Proximity', 'Urgency', 'Category'].map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
-        );
-      },
-    );
+          ],
+        ),
+        drawer: currentUser != null ? Sidebar(userModel: currentUser!) : null,
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage != null
+                ? Center(child: Text(errorMessage!))
+                : Column(
+                    children: [
+                      const FilteredProblemFeed(),
+                      Expanded(
+                        child: problems.isEmpty
+                            ? const Center(
+                                child: Text("No problems found for your state"))
+                            : ProblemList(problems: problems, currentUser: currentUser!,),
+                      ),
+                    ],
+                  ),
+      );
+    }
   }
-}
 
-class ProblemList extends StatelessWidget {
+  class FilteredProblemFeed extends StatefulWidget {
+    const FilteredProblemFeed({super.key});
+
+    @override
+    State<FilteredProblemFeed> createState() => _FilteredProblemFeedState();
+  }
+
+  class _FilteredProblemFeedState extends State<FilteredProblemFeed> {
+    String _selectedFilter = 'Proximity';
+
+    @override
+    Widget build(BuildContext context) {
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 5,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Filtered Problem Feed",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            _buildAnimatedFilter(),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildAnimatedFilter() {
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 300),
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: value,
+            child: PopupMenuButton<String>(
+              initialValue: _selectedFilter,
+              onSelected: (String value) {
+                setState(() => _selectedFilter = value);
+                // Implement filter functionality based on _selectedFilter
+              },
+              child: Chip(
+                avatar: const Icon(Icons.filter_list, size: 20),
+                label: Text(_selectedFilter),
+                backgroundColor: Colors.blue.withOpacity(0.1),
+              ),
+              itemBuilder: (BuildContext context) {
+                return ['Proximity', 'Urgency', 'Category'].map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  class ProblemList extends StatelessWidget {
   final List<ProblemModel> problems;
+  final UserModel currentUser; // Add this parameter to pass the user model.
 
-  const ProblemList({super.key, required this.problems});
+  const ProblemList({
+    super.key,
+    required this.problems,
+    required this.currentUser, // Mark as required.
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -274,6 +279,7 @@ class ProblemList extends StatelessWidget {
         return ProblemCard(
           problemData: problem,
           index: index,
+          userModel: currentUser, // Pass the current user to ProblemCard.
         );
       },
     );
@@ -283,11 +289,13 @@ class ProblemList extends StatelessWidget {
 class ProblemCard extends StatefulWidget {
   final ProblemModel problemData;
   final int index;
+  final UserModel userModel; // Correctly include this parameter.
 
   const ProblemCard({
     super.key,
     required this.problemData,
     required this.index,
+    required this.userModel, // Mark as required.
   });
 
   @override
@@ -338,8 +346,10 @@ class _ProblemCardState extends State<ProblemCard>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    ProblemDetailsScreen(problemData: widget.problemData),
+                builder: (context) => ProblemDetailsScreen(
+                  problemData: widget.problemData,
+                  userModel: widget.userModel, // Pass the correct user model.
+                ),
               ),
             );
           },
