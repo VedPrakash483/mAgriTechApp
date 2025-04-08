@@ -8,7 +8,7 @@ import 'package:translator/translator.dart';
 import 'dart:convert';
 
 
-const String GEMINI_API_KEY = 'AIzaSyDyevZsMVEiuQZSDJhxuiCS0VpwMEKfXFk';
+const String GEMINI_API_KEY = 'AIzaSyC8OFeKJfpquaP2i8X56Ulpv1eXvPgYI2Y';
 
 class LanguageData {
   final String code;
@@ -80,24 +80,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   String _translatedText = '';
   bool _isLoading = false;
   bool _isAnalysisExpanded = false;
-  bool _isSolutionExpanded = true; // Default to expanded for solution
   final FlutterTts _flutterTts = FlutterTts();
   final translator = GoogleTranslator();
   List<AnalysisHistoryItem> _history = [];
   late final GenerativeModel model;
   LanguageData _selectedLanguage = AppConstants.indianLanguages[0]; // Default to Hindi
   bool _isSpeaking = false;
-  String _translatedSolution = ''; // For translated solution text
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
     _initializeTTS();
-    // If there's a solution, translate it on load
-    if (widget.problem.solution != null && widget.problem.solution!.isNotEmpty) {
-      _translateSolution(widget.problem.solution!);
-    }
   }
 
   Future<void> _initializeApp() async {
@@ -158,91 +152,76 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     }
   }
 
-  Future<void> _translateSolution(String text) async {
-    try {
-      final translation = await translator.translate(
-        text,
-        to: _selectedLanguage.code,
-      );
-      setState(() {
-        _translatedSolution = translation.text;
-      });
-    } catch (e) {
-      _showSnackBar('Solution translation error: ${e.toString()}');
-    }
-  }
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
-  Future<void> _analyzeImage() async {
-    if (widget.problem.imageUrl == null) {
-      _showSnackBar('No image available to analyze');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _analysisResult = '';
-      _translatedText = '';
-    });
-
-    try {
-      // Create a GenerativeModel with vision capabilities
-      final visionModel = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: GEMINI_API_KEY,
-      );
-
-      // For now, let's use a text-only approach since we're having issues with the image API
-      // We'll include the image URL in the prompt
-      final prompt = 'Analyze this plant/animal/human issue and provide me with a solution about it. Description: ${widget.problem.description}\n' +
-                    'The plant image is available at: ${widget.problem.imageUrl}\n' +
-                    'Please provide a detailed analysis of what might be happening to this plant based on the description.';
-      
-      // Generate content with text only
-      final response = await visionModel.generateContent([
-        Content.text(prompt),
-      ]);
-
-      // Clean up the response
-      final result = response.text?.replaceAll(RegExp(r'\n\s*\n'), '\n')
-                                  .replaceAll(RegExp(r'\s+'), ' ')
-                                  .trim() ?? 'No response generated';
-
-      setState(() {
-        _analysisResult = result;
-        _isAnalysisExpanded = true;
-      });
-
-      await _translateText(result);
-
-      final historyItem = AnalysisHistoryItem(
-        timestamp: DateTime.now().toIso8601String(),
-        originalText: _analysisResult,
-        translatedText: _translatedText,
-        languageCode: _selectedLanguage.code,
-        languageName: _selectedLanguage.name,
-      );
-
-      // Save history item
-      _history.add(historyItem);
-      await _saveHistory();
-    } catch (e) {
-      setState(() {
-        _analysisResult = 'Error: ${e.toString()}';
-      });
-      _showSnackBar('Analysis error: ${e.toString()}');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+ Future<void> _analyzeImage() async {
+  if (widget.problem.imageUrl == null) {
+    _showSnackBar('No image available to analyze');
+    return;
   }
 
+  setState(() {
+    _isLoading = true;
+    _analysisResult = '';
+    _translatedText = '';
+  });
+
+  try {
+    // Create a GenerativeModel with vision capabilities
+    final visionModel = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: GEMINI_API_KEY,
+    );
+
+    // For now, let's use a text-only approach since we're having issues with the image API
+    // We'll include the image URL in the prompt
+    final prompt = 'Analyze this plant issue. Description: ${widget.problem.description}\n' +
+                  'The plant image is available at: ${widget.problem.imageUrl}\n' +
+                  'Please provide a detailed analysis of what might be happening to this plant based on the description.';
+    
+    // Generate content with text only
+    final response = await visionModel.generateContent([
+      Content.text(prompt),
+    ]);
+
+    // Clean up the response
+    final result = response.text?.replaceAll(RegExp(r'\n\s*\n'), '\n')
+                                .replaceAll(RegExp(r'\s+'), ' ')
+                                .trim() ?? 'No response generated';
+
+    setState(() {
+      _analysisResult = result;
+      _isAnalysisExpanded = true;
+    });
+
+    await _translateText(result);
+
+    final historyItem = AnalysisHistoryItem(
+      timestamp: DateTime.now().toIso8601String(),
+      originalText: _analysisResult,
+      translatedText: _translatedText,
+      languageCode: _selectedLanguage.code,
+      languageName: _selectedLanguage.name,
+    );
+
+    // Save history item
+    _history.add(historyItem);
+    await _saveHistory();
+  } catch (e) {
+    setState(() {
+      _analysisResult = 'Error: ${e.toString()}';
+    });
+    _showSnackBar('Analysis error: ${e.toString()}');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
   Future<void> _speakTranslation() async {
     if (_isSpeaking) {
       await _flutterTts.stop();
@@ -252,20 +231,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     setState(() {
       _isSpeaking = !_isSpeaking;
     });
-  }
-
-  Future<void> _speakSolution() async {
-    if (_isSpeaking) {
-      await _flutterTts.stop();
-      setState(() {
-        _isSpeaking = false;
-      });
-    } else {
-      await _flutterTts.speak(_translatedSolution);
-      setState(() {
-        _isSpeaking = true;
-      });
-    }
   }
 
   void _showLanguageSelector() {
@@ -300,10 +265,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         await _initializeTTS();
                         if (_analysisResult.isNotEmpty) {
                           await _translateText(_analysisResult);
-                        }
-                        // Also translate the solution if available
-                        if (widget.problem.solution != null && widget.problem.solution!.isNotEmpty) {
-                          await _translateSolution(widget.problem.solution!);
                         }
                         Navigator.pop(context);
                       },
@@ -414,10 +375,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             _buildLocationSection(),
             const SizedBox(height: 24),
             if (widget.problem.imageUrl != null) _buildImageSection(),
-            const SizedBox(height: 16),
-            // Add Solution section if available
-            if (widget.problem.solution != null && widget.problem.solution!.isNotEmpty) 
-              _buildSolutionSection(),
             if (widget.problem.imageUrl != null) 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -510,62 +467,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             fontSize: 16,
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildSolutionSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 32),
-        ExpansionTile(
-          initiallyExpanded: _isSolutionExpanded,
-          title: const Text(
-            'Expert Solution',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Solution (English):',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.problem.solution ?? 'No solution provided yet',
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                  if (_translatedSolution.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Translated (${_selectedLanguage.name}):',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _translatedSolution,
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: _speakSolution,
-                        icon: Icon(_isSpeaking ? Icons.stop : Icons.volume_up),
-                        label: Text(_isSpeaking ? 'Stop' : 'Speak Solution'),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-        const Divider(height: 32),
       ],
     );
   }
